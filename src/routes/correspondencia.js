@@ -86,26 +86,21 @@ router.get('/api/correspondencia/:correlativo', ( req, res ) => {
    
 });
 
-router.get('/api/correspondencia/mod/:correlativo', ( req, res ) => {
-    const { correlativo } = req.params;
-
-    try {
-
-        mysqlConnection.query('SELECT idTipoEnvio, usuario, destinatario, referencia, estadoCorreo  FROM correo WHERE correlativo = ?', [ correlativo ],
+router.get('/api/correspondencia/filtrar/:fechaInicio/:fechaTermino', ( req, res ) => {
+    const { fechaInicio, fechaTermino  } = req.params; 
+    const query = ` CALL SP_FILTROFECHAS( ?, ? ); `;
+        mysqlConnection.query(query, [ fechaInicio, fechaTermino ],
         ( error, filas, campos ) => {
             if(!error) {
-                res.json(filas[0]);            
-                console.log(filas[0])
+                res.json(filas); 
+            }else {
+                console.log(error);
+                res.json({
+                    Error: error,
+                    msg: 'No se encuentran correspondencias'
+                })
             }
-        });
-    } catch (error) {
-        console.log(error);
-        res.json({
-             Error: error,
-             msg: 'Correlativo no existe'
-        })
-    }
-   
+        }); 
 });
 
 router.post('/api/correspondencia/ingresar', ( req, res ) => {
@@ -127,19 +122,36 @@ router.post('/api/correspondencia/ingresar', ( req, res ) => {
 
 router.put('/api/correspondencia/modificar/:correlativo', ( req, res ) => {
     const { idTipoEnvio, destinatario, referencia, estadoCorreo } = req.body;
-    const { correlativo } = req.params;
-    console.log(correlativo)
-    const query = `
-        CALL SP_MODIFICARCORRESPONDENCIA( ?, ?, ?, ?, ? );
-    `;
-    mysqlConnection.query(query, [ idTipoEnvio, destinatario, referencia, correlativo, estadoCorreo ],
-        ( error, filas, campos ) => {
-            if(!error) {
-                res.json({Status: 'Se a actualizado la correspondencia'});
-            } else {
-                console.log(error);
+    const { correlativo } = req.params;  
+    const query2 =  `
+        select estadoCorreo from correo where correlativo = ?
+    ` ;    
+    mysqlConnection.query(query2, [correlativo], (error, filas, campos) => {       
+        if(!error){
+            if( filas[0].estadoCorreo === 'ANULADO' ) {
+            res.json({
+                status: 'No se puede modificar',
+                msg: 'la correspondencia ya se encuentra anulada'
+                
+            });            
+            return;            
+            }else {
+                const query = `
+                    CALL SP_MODIFICARCORRESPONDENCIA( ?, ?, ?, ?, ? );
+                `;
+                mysqlConnection.query(query, [ idTipoEnvio, destinatario, referencia, correlativo, estadoCorreo ],
+                    ( error, filas, campos ) => {
+                        if(!error) {
+                            res.json({Status: 'Se a actualizado la correspondencia'});
+                        } else {
+                            console.log(error);
+                        }
+                    });
             }
-        });
+        }else {
+            console.log(error)
+        }       
+    })     
 });
 
 module.exports = router;
