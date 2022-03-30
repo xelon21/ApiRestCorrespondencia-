@@ -4,6 +4,7 @@ var os = require('os');
 
 
 
+
 /** Metodo que muestra todas las correspondencias. */
 const mostrarCorrespondencia = async ( req, res = response) => {
     await pool.query(`select d.nombreDocumento,
@@ -195,7 +196,7 @@ const modificarCorrespondencia = async ( req, res ) => {
                 }else {
                     res.json({
                         status: 'No se puede modificar',
-                        msg: 'Usted no es el usuario que creeo esta correspondencia'                        
+                        msg: 'Error al modificar la correspondencia'                        
                     });  
                 }
             }
@@ -204,6 +205,9 @@ const modificarCorrespondencia = async ( req, res ) => {
         }       
     })     
 }
+
+
+
 
 
 module.exports =  {
@@ -216,4 +220,5 @@ module.exports =  {
     filtroRangoFechas,
     ingresarCorrespondencia,
     modificarCorrespondencia
+    
 }
