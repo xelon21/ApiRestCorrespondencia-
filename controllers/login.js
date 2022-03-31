@@ -25,6 +25,7 @@ const loginUsuario = (req, res = response) => {
                         msg: 'Se ha conectado con exito',
                         apiKey: token,
                         uid: result[0].idUsuario,
+                        idRol: result[0].idRol,                        
                         nombre: result[0].nombreUsuario,
                         estado: result[0].estado
                     });                                      
@@ -71,8 +72,20 @@ const validaApiKey = async ( req, res ) => {
     })  
 }
 
+const traeRoles = async ( req, res ) => {
+
+    await pool.query('select * from roles',(error, filas, campos) => {
+        if(!error) {
+            res.status(200).json(filas);
+        }else {
+            console.log(error);
+        }
+    });
+}
+
 module.exports = {
     loginUsuario,
     registroUsuario,
-    validaApiKey
+    validaApiKey,
+    traeRoles
 }

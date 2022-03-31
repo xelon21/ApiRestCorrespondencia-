@@ -8,9 +8,6 @@ const { mostrarCorrespondencia, muestraUltimo,
         filtroRangoFechas, ingresarCorrespondencia,
         modificarCorrespondencia 
 } = require('../controllers/correspondencia');
-const { loginUsuario, registroUsuario, 
-        validaApiKey } = require('../controllers/login');
-const { validarJWT } = require('../middlewares/validar-jwt');
 
 
 
@@ -31,12 +28,6 @@ router.get('/filtrar/:fechaInicio/:fechaTermino', filtroRangoFechas);
 router.post('/ingresar', ingresarCorrespondencia);
 
 router.put('/modificar/:correlativo', modificarCorrespondencia);
-
-router.post('/login',  loginUsuario);
-
-router.post('/login/register', registroUsuario);
-
-router.get('/login/validaKey', validarJWT , validaApiKey);
 
 /**[
     check('email', 'El email es obligatorio').isEmail().isEmpty(),
