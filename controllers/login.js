@@ -2,12 +2,12 @@ const { response } = require('express');
 const pool = require('../database/database');
 const bcryptjs = require('bcryptjs');
 const { promisify } = require('util'); 
-const { generarJWT } = require('../helpers/jwt');
+const { generarJWT, generarJWTAdmin } = require('../helpers/jwt');
 
 const loginUsuario = (req, res = response) => {
 
     try {
-        const {email, password} = req.body
+        const {email, password} = req.body        
         
         if(!email || !password){
             res.json('Debe ingresar un usuario y contraseña')
@@ -16,8 +16,19 @@ const loginUsuario = (req, res = response) => {
                 
                 if(result.length === 0 || !(await bcryptjs.compare(password, result[0].password))){                    
                     res.json('Las credenciales no coinciden');                    
-                }else {                    
+                }if(result[0].idRol === 1 ){   
+                    const token = await generarJWTAdmin( result[0].idUsuario, result[0].idRol );
                     
+                    res.json({
+                        estadoMsg: true,
+                        msg: 'Se ha conectado con exito',
+                        apiKey: token,
+                        uid: result[0].idUsuario,
+                        idRol: result[0].idRol,                        
+                        nombre: result[0].nombreUsuario,
+                        estado: result[0].estado
+                    });   
+                }else {
                     const token = await generarJWT( result[0].idUsuario, result[0].nombreUsuario );
                     
                     res.json({
@@ -28,7 +39,7 @@ const loginUsuario = (req, res = response) => {
                         idRol: result[0].idRol,                        
                         nombre: result[0].nombreUsuario,
                         estado: result[0].estado
-                    });                                      
+                    });        
                 }
             })
         }        
@@ -36,16 +47,16 @@ const loginUsuario = (req, res = response) => {
     } catch (error) {
         console.log(error)
     }
-    //const errors = validationResult() 
+    
 }
 
 const registroUsuario = async (req, res) => {
 
-    const { idRol, email, password, nombreUsuario, estado } = req.body
+    const {idUsuario, idRol, email, password, nombreUsuario, estado } = req.body
 
     let hashPass = await bcryptjs.hash(password, 8)
 
-    pool.query('insert into usuarios set ?',{ idRol: idRol, correoUsuario: email, password:hashPass, nombreUsuario:nombreUsuario, estado: estado},
+    pool.query('insert into usuarios set ?',{idUsuario: idUsuario, idRol: idRol, correoUsuario: email, password:hashPass, nombreUsuario:nombreUsuario, estado: estado},
     (error, result) => {
         if(error){
             console.log(error)
@@ -83,9 +94,33 @@ const traeRoles = async ( req, res ) => {
     });
 }
 
+const traeUsuario = async ( req, res ) => {
+     await pool.query(' SELECT  idUsuario, nombreUsuario, r.rol FROM usuarios u join roles r on ( u.idRol = r.idRol)', (error, filas, campos) => {
+        if(!error) {
+            const { idUsuario, idRol } = req;    
+
+            const apiKey = generarJWTAdmin( idUsuario, idRol ) ;
+            console.log(filas)
+        
+            return res.json({
+                estadoMsg: true,
+                msg: 'Key Valida',
+                uid: idUsuario,
+                nombre: nombreUsuario,
+                rol: rol,
+                apiKey: apiKey
+            })  
+            
+        }else {
+            console.log(error);
+        }
+    })
+} 
+
 module.exports = {
     loginUsuario,
     registroUsuario,
     validaApiKey,
-    traeRoles
+    traeRoles,
+    traeUsuario
 }

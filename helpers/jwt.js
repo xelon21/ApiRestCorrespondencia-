@@ -20,7 +20,25 @@ const generarJWT = (idUsuario, nombreUsuario) => {
     }); 
 }
 
+const generarJWTAdmin = ( idUsuario, idRol ) => {
+    const payload = { idUsuario, idRol };
+
+    return new Promise ( ( resolve, reject ) => {
+        jwt.sign( payload, process.env.JWT_SECRET_ADMIN, {
+            expiresIn: '3h'
+        }, ( error, token ) => {
+            if( error ) {
+                console.log( error );
+                reject(error)
+            }else {
+                resolve( token )
+            }
+        })
+    }); 
+}
+
 
 module.exports = {
-    generarJWT
+    generarJWT,
+    generarJWTAdmin
 }

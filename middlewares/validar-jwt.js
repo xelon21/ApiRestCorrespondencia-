@@ -24,7 +24,33 @@ const validarJWT = ( req, res = response, next ) => {
     next();
 }
 
+const validarAdmin = ( req, res = response, next ) => {
+    const apiKey = req.header('x-api-key');
+    if( !apiKey ) {
+        return res.status(401).json({
+            Error: 'No tiene permisos'
+        })
+    }
+    try {
+        const { idUsuario, idRol } = jwt.verify( apiKey, process.env.JWT_SECRET_ADMIN );
+        req.idUsuario = idUsuario;
+        req.idRol = idRol;        
+        if(req.idRol === 1 ) {
+            return res.status(200).json({
+                msg: ' Si posee permisos'
+            })
+        }
+    } catch (error) {
+        return res.status(401).json({
+            Error: 'Key no valida'
+        })
+    }
+
+    next();
+}
+
 
 module.exports = {
-    validarJWT
+    validarJWT,
+    validarAdmin
 }
