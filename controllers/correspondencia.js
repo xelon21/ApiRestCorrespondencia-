@@ -168,18 +168,17 @@ const modificarCorrespondencia = async ( req, res ) => {
     const { idTipoEnvio, destinatario, referencia, estadoCorreo } = req.body;
     const { correlativo } = req.params;  
     const query2 =  `
-        select estadoCorreo from correo where correlativo = ?
+        select * from correo where correlativo = ?
     ` ;    
     await pool.query(query2, [correlativo], (error, filas, campos) => {       
-        if(!error){
+        if(!error){            
             if( filas[0].estadoCorreo === 'ANULADO' ) {
             res.json({
                 status: 'No se puede modificar',
-                msg: 'la correspondencia ya se encuentra anulada'
-                
+                msg: 'la correspondencia ya se encuentra anulada'                
             });            
             return;            
-            }else {
+            }else {                
                 if(filas[0].usuario === usuario) {
 
                     const query = `

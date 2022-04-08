@@ -8,7 +8,8 @@ const generarJWT = (idUsuario, nombreUsuario) => {
 
     return new Promise( (resolve, reject) => {
         jwt.sign( payload, process.env.JWT_SECRET, {
-            expiresIn: '8h'
+            expiresIn: '8h',
+            
         }, (error, token) => {
             if( error ) {
                 console.log( error );
