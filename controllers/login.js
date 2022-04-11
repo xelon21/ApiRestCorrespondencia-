@@ -3,22 +3,20 @@ const pool = require('../database/database');
 const bcryptjs = require('bcryptjs');
 const { promisify } = require('util'); 
 const { generarJWT, generarJWTAdmin } = require('../helpers/jwt');
+const { Console } = require('console');
 
 const loginUsuario = (req, res = response) => {
 
     try {
-        const {email, password} = req.body        
+        
+        const {email, password} = req.body       
         
         if(!email || !password){
             res.json('Debe ingresar un usuario y contraseña')
         }else {
-            pool.query('select * from usuarios where correoUsuario = ? ', [email], async (error, result) => {
-                
+            pool.query('select * from usuarios where correoUsuario = ? ', [email], async (error, result) => {                                      
                 if(result.length === 0 || !(await bcryptjs.compare(password, result[0].password))){                    
-                    res.json('Las credenciales no coinciden');                    
-                }if(result[0].idRol === 1 ){   
-                    const token = await generarJWTAdmin( result[0].idUsuario, result[0].idRol );
-                    
+                    const token = await generarJWT( result[0].idUsuario, result[0].nombreUsuario );                    
                     res.json({
                         estadoMsg: true,
                         msg: 'Se ha conectado con exito',
@@ -27,19 +25,9 @@ const loginUsuario = (req, res = response) => {
                         idRol: result[0].idRol,                        
                         nombre: result[0].nombreUsuario,
                         estado: result[0].estado
-                    });   
-                }else {
-                    const token = await generarJWT( result[0].idUsuario, result[0].nombreUsuario );
-                    
-                    res.json({
-                        estadoMsg: true,
-                        msg: 'Se ha conectado con exito',
-                        apiKey: token,
-                        uid: result[0].idUsuario,
-                        idRol: result[0].idRol,                        
-                        nombre: result[0].nombreUsuario,
-                        estado: result[0].estado
-                    });        
+                    });
+                }else {                    
+                    res.json('Las credenciales no coinciden');
                 }
             })
         }        
@@ -124,3 +112,32 @@ module.exports = {
     traeRoles,
     traeUsuario
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// if(result[0].idRol === 1 ){   
+//     const token = await generarJWTAdmin( result[0].idUsuario, result[0].idRol );
+//     console.log('3 paso por aca')
+//     res.json({
+//         estadoMsg: true,
+//         msg: 'Se ha conectado con exito',
+//         apiKey: token,
+//         uid: result[0].idUsuario,
+//         idRol: result[0].idRol,                        
+//         nombre: result[0].nombreUsuario,
+//         estado: result[0].estado
+//     });   
+// }

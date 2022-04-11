@@ -195,7 +195,8 @@ const modificarCorrespondencia = async ( req, res ) => {
                 }else {
                     res.json({
                         status: 'No se puede modificar',
-                        msg: 'Error al modificar la correspondencia'                        
+                        msg: 'Error al modificar la correspondencia',
+                        us: usuario                        
                     });  
                 }
             }
