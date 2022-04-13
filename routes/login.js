@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const router = Router();
 const { loginUsuario, registroUsuario, 
-    validaApiKey, 
+    validaApiKey, filtroUsuario,
     traeRoles, traeUsuario} = require('../controllers/login');
 const { validarJWT, validarAdmin } = require('../middlewares/validar-jwt');
 
@@ -16,7 +16,9 @@ router.get('/login/validaKey', validarJWT , validaApiKey);
 
 router.get('/login/traeRoles', traeRoles);
 
-router.get('/login/traeUsuarios', validarAdmin, traeUsuario)
+router.get('/login/traeUsuarios', traeUsuario);
+
+router.get('/login/filtraUsuario/:nombreUsuario', filtroUsuario );
 
 
 

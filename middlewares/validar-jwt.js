@@ -32,8 +32,8 @@ const validarAdmin = ( req, res = response, next ) => {
         })
     }
     try {
-        const { idUsuario, idRol } = jwt.verify( apiKey, process.env.JWT_SECRET_ADMIN );
-        req.idUsuario = idUsuario;
+        const { nombreUsuario, idRol } = jwt.verify( apiKey, process.env.JWT_SECRET_ADMIN );
+        req.nombreUsuario = nombreUsuario;
         req.idRol = idRol;        
         if(req.idRol === 1 ) {
             return res.status(200).json({

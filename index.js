@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
+const path = require('path');
 const app = express();
 const cors = require('cors');
 //const { mysqlConnection } = require('./database/database');
@@ -28,6 +29,11 @@ app.use((req, res, next) => {
 // Rutas
 app.use('/api/correspondencia',require('./routes/correspondencia'));
 app.use('/api/correspondencia',require('./routes/login'));
+
+// Manejas demas rutas
+app.get('*', ( req, res ) => {
+    res.sendFile( path.resolve( __dirname, 'public/index.html' ))
+})
 
 // inicio de servidor
 app.listen( process.env.PORT, () => {

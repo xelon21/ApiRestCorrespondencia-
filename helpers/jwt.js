@@ -21,8 +21,8 @@ const generarJWT = (idUsuario, nombreUsuario) => {
     }); 
 }
 
-const generarJWTAdmin = ( idUsuario, idRol ) => {
-    const payload = { idUsuario, idRol };
+const generarJWTAdmin = ( nombreUsuario, idRol ) => {
+    const payload = { nombreUsuario, idRol };
 
     return new Promise ( ( resolve, reject ) => {
         jwt.sign( payload, process.env.JWT_SECRET_ADMIN, {
