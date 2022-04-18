@@ -25,7 +25,7 @@ const generarJWTAdmin = ( nombreUsuario, idRol ) => {
     const payload = { nombreUsuario, idRol };
 
     return new Promise ( ( resolve, reject ) => {
-        jwt.sign( payload, process.env.JWT_SECRET_SECRET, {
+        jwt.sign( payload, process.env.JWT_SECRET, {
             expiresIn: '3h'
         }, ( error, token ) => {
             if( error ) {

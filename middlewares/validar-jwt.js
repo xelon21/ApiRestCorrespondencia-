@@ -32,14 +32,16 @@ const validarAdmin = ( req, res = response, next ) => {
         })
     }    
     try {
-        const { nombreUsuario, idRol } = jwt.verify( apiKey, process.env.JWT_SECRET_SECRET );       
+        const { nombreUsuario, idRol } = jwt.verify( apiKey, process.env.JWT_SECRET );       
         req.nombreUsuario = nombreUsuario;
-        req.idRol = idRol;        
-        if(req.idRol === 1 ) {
-            return res.status(200).json({
-                msg: ' Si posee permisos'
-            })
-        }
+        req.idRol = idRol;     
+        // console.log(idRol, nombreUsuario)   
+        // if(req.idRol === 1 ) {
+        //     console.log('entro xD')
+        //         res.status(200).json({
+        //         msg: ' Si posee permisos'
+        //     })            
+        // }
     } catch (error) {
         console.log(error)
         return res.status(401).json({

@@ -88,35 +88,50 @@ const registroUsuario = async (req, res) => {
 
 const validaApiKey = async ( req, res ) => {    
 
-    const { nombreUsuario, idRol } = req;  
-  
-    const apiKey = await generarJWT( nombreUsuario, idRol ) ;    
-    return res.json({
-        estadoMsg: true,
-        msg: 'Key Valida',        
-        nombre: nombreUsuario,
-        idRol: idRol,
-        apiKey: apiKey
-    })  
+    const { nombreUsuario, idRol } = req; 
+    try {
+        const apiKey = await generarJWT( nombreUsuario, idRol ) ;    
+        return res.status(200).json({
+            estadoMsg: true,
+            msg: 'Key Valida',        
+            nombre: nombreUsuario,
+            idRol: idRol,
+            apiKey: apiKey
+        })  
+        
+    } catch (error) {
+        console.log(error);
+        res.status(401).json({
+             Error: error,
+             msg: 'No valido'
+        })
+    }
 }
 
-const validaApiKeyAdmin = async ( req, res ) => {    
+const validaApiKeyAdmin = async ( req, res ) => { 
 
-    const { nombreUsuario, idRol } = req;    
-
-    const apiKey = await generarJWTAdmin( nombreUsuario, idRol ) ;
-    console.log('validaapikeyadmin: ', nombreUsuario, idRol)
-    return res.json({
-        estadoMsg: true,
-        msg: 'Key Valida',        
-        nombre: nombreUsuario,
-        idRol: idRol,
-        apiKey: apiKey
-    })  
+    const { nombreUsuario, idRol } = req;       
+            if( idRol === 1 ){
+                const apiKey = await generarJWTAdmin( nombreUsuario, idRol ) ;
+                console.log('validaapikeyadmin: ', nombreUsuario, idRol)
+                return res.status(200).json({
+                    estadoMsg: true,
+                    msg: 'Key Valida',        
+                    nombre: nombreUsuario,
+                    idRol: idRol,
+                    apiKey: apiKey
+                }) 
+            } else {
+                return res.status(401).json({
+                    Error: error,
+                    msg: 'No valido'
+                })
+             }    
+    
 }
 
 const traeRoles = async ( req, res ) => {
-
+    
     await pool.query('select * from roles',(error, filas, campos) => {
         if(!error) {
             res.status(200).json(filas);
@@ -127,10 +142,10 @@ const traeRoles = async ( req, res ) => {
 }
 
 const traeUsuario = async ( req, res ) => {
-     await pool.query(`SELECT  idUsuario, nombreUsuario, r.rol, correoUsuario,
-                               estado, activacionUsuario, desactivacionUsuario 
-                            FROM usuarios u join roles r on ( u.idRol = r.idRol)`,
-                             (error, filas, campos) => {
+    await pool.query(`SELECT  idUsuario, nombreUsuario, r.rol, correoUsuario,
+    estado, activacionUsuario, desactivacionUsuario 
+    FROM usuarios u join roles r on ( u.idRol = r.idRol)`,
+    (error, filas, campos) => {
         if(!error) {
             res.status(200).json(filas)            
         }else {
@@ -159,19 +174,25 @@ module.exports = {
 
 
 
+// console.log(error);
+// res.status(401).json({
+//     Error: error,
+//     msg: 'No valido'
+// })
+
 // const { nombreUsuario, idRol } = req;    
-            // const apiKey = generarJWTAdmin( nombreUsuario, idRol ) ;            
-        
-            // return res.json({
-            //     estadoMsg: true,
-            //     msg: 'Key Valida',
-            //     uid: FileSystemDirectoryReaderidUsuario,
-            //     nombre: nombreUsuario,
-            //     correoUsuario: correoUsuario,
-            //     estado: estado,
-            //     activacionUsuario: activacionUsuario,
-            //     desactivacionUsuario: desactivacionUsuario,                
-            //     rol: rol,
+// const apiKey = generarJWTAdmin( nombreUsuario, idRol ) ;            
+
+// return res.json({
+    //     estadoMsg: true,
+    //     msg: 'Key Valida',
+    //     uid: FileSystemDirectoryReaderidUsuario,
+    //     nombre: nombreUsuario,
+    //     correoUsuario: correoUsuario,
+    //     estado: estado,
+    //     activacionUsuario: activacionUsuario,
+    //     desactivacionUsuario: desactivacionUsuario,                
+    //     rol: rol,
             //     apiKey: apiKey
             // })  
             
