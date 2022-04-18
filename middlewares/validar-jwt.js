@@ -11,9 +11,9 @@ const validarJWT = ( req, res = response, next ) => {
         })
     }
     try {
-        const { idUsuario, nombreUsuario } = jwt.verify( apiKey, process.env.JWT_SECRET );
-        req.idUsuario = idUsuario;
+        const {nombreUsuario, idRol} = jwt.verify( apiKey, process.env.JWT_SECRET );        
         req.nombreUsuario = nombreUsuario;
+        req.idRol = idRol;
     } catch (error) {
         return res.status(401).json({
             Error: 'Key no valida'
@@ -30,9 +30,9 @@ const validarAdmin = ( req, res = response, next ) => {
         return res.status(401).json({
             Error: 'No tiene permisos'
         })
-    }
+    }    
     try {
-        const { nombreUsuario, idRol } = jwt.verify( apiKey, process.env.JWT_SECRET_ADMIN );
+        const { nombreUsuario, idRol } = jwt.verify( apiKey, process.env.JWT_SECRET_SECRET );       
         req.nombreUsuario = nombreUsuario;
         req.idRol = idRol;        
         if(req.idRol === 1 ) {
@@ -41,6 +41,7 @@ const validarAdmin = ( req, res = response, next ) => {
             })
         }
     } catch (error) {
+        console.log(error)
         return res.status(401).json({
             Error: 'Key no valida'
         })

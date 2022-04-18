@@ -1,6 +1,5 @@
 // Se importan los componentes a utilizar
 const { Router } = require('express');
-const { check } = require('express-validator');
 const router = Router();
 const { mostrarCorrespondencia, muestraUltimo,
         muestraTipoEnvio, muestraTipoDocumento,

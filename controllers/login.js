@@ -15,19 +15,21 @@ const loginUsuario = (req, res = response) => {
         }else {
             pool.query('select idUsuario, idRol, correoUsuario, password, nombreUsuario, estado from usuarios where correoUsuario = ? ', [email], async (error, result) => {  
                                                 
-                if(result.length === 0 || !(await bcryptjs.compare(password, result[0].password))){  
+                if(result.length === 0 || !(await bcryptjs.compare(password, result[0].password))){                     
 
-                    const token = await generarJWT( result[0].idUsuario, result[0].nombreUsuario );            
-
+                    const token = await generarJWT( result[0].nombreUsuario, result[0].idRol );            
+    
                     res.json({
                         estadoMsg: true,
                         msg: 'Se ha conectado con exito',
                         apiKey: token,
                         uid: result[0].idUsuario,
+                        email: result[0].correoUsuario,
                         idRol: result[0].idRol,                        
                         nombre: result[0].nombreUsuario,                        
                         estado: result[0].estado
                     });
+                    
                 }else {                    
                     res.json('Las credenciales no coinciden');
                 }
@@ -86,15 +88,29 @@ const registroUsuario = async (req, res) => {
 
 const validaApiKey = async ( req, res ) => {    
 
-    const { idUsuario, nombreUsuario } = req;    
-
-    const apiKey = await generarJWT( idUsuario, nombreUsuario ) ;
-   
+    const { nombreUsuario, idRol } = req;  
+  
+    const apiKey = await generarJWT( nombreUsuario, idRol ) ;    
     return res.json({
         estadoMsg: true,
-        msg: 'Key Valida',
-        uid: idUsuario,
+        msg: 'Key Valida',        
         nombre: nombreUsuario,
+        idRol: idRol,
+        apiKey: apiKey
+    })  
+}
+
+const validaApiKeyAdmin = async ( req, res ) => {    
+
+    const { nombreUsuario, idRol } = req;    
+
+    const apiKey = await generarJWTAdmin( nombreUsuario, idRol ) ;
+    console.log('validaapikeyadmin: ', nombreUsuario, idRol)
+    return res.json({
+        estadoMsg: true,
+        msg: 'Key Valida',        
+        nombre: nombreUsuario,
+        idRol: idRol,
         apiKey: apiKey
     })  
 }
@@ -129,7 +145,8 @@ module.exports = {
     validaApiKey,
     traeRoles,
     traeUsuario,
-    filtroUsuario
+    filtroUsuario,
+    validaApiKeyAdmin
 }
 
 

@@ -2,9 +2,9 @@ const jwt = require('jsonwebtoken');
 
 
 
-const generarJWT = (idUsuario, nombreUsuario) => {
+const generarJWT = (nombreUsuario,  idRol) => {
 
-    const payload = { idUsuario, nombreUsuario };
+    const payload = { nombreUsuario,  idRol };
 
     return new Promise( (resolve, reject) => {
         jwt.sign( payload, process.env.JWT_SECRET, {
@@ -25,7 +25,7 @@ const generarJWTAdmin = ( nombreUsuario, idRol ) => {
     const payload = { nombreUsuario, idRol };
 
     return new Promise ( ( resolve, reject ) => {
-        jwt.sign( payload, process.env.JWT_SECRET_ADMIN, {
+        jwt.sign( payload, process.env.JWT_SECRET_SECRET, {
             expiresIn: '3h'
         }, ( error, token ) => {
             if( error ) {
