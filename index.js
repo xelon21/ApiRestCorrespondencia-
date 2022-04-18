@@ -3,12 +3,15 @@ const morgan = require('morgan');
 const path = require('path');
 const app = express();
 const cors = require('cors');
+const helmet = require('helmet');
 //const { mysqlConnection } = require('./database/database');
 require('dotenv').config();
 
 
 // Coneccion con la base de datos
 //mysqlConnection();
+// Helmet
+app.use(helmet());
 
 //Directorio Publico
 app.use( express.static('public'));

@@ -8,6 +8,8 @@ const { mostrarCorrespondencia, muestraUltimo,
         modificarCorrespondencia 
 } = require('../controllers/correspondencia');
 
+const { validateCreate, validateUpdate } = require('../validators/correspondencia')
+
 
 
 router.get('/mostrar', mostrarCorrespondencia);
@@ -24,9 +26,9 @@ router.get('/:correlativo', filtroCorrelativo);
 
 router.get('/filtrar/:fechaInicio/:fechaTermino', filtroRangoFechas);
 
-router.post('/ingresar', ingresarCorrespondencia);
+router.post('/ingresar', validateCreate, ingresarCorrespondencia);
 
-router.put('/modificar/:correlativo', modificarCorrespondencia);
+router.put('/modificar/:correlativo', validateUpdate, modificarCorrespondencia);
 
 /**[
     check('email', 'El email es obligatorio').isEmail().isEmpty(),

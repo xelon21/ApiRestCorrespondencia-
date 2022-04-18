@@ -4,11 +4,11 @@ const { loginUsuario, registroUsuario,
     validaApiKey, filtroUsuario,
     traeRoles, traeUsuario, validaApiKeyAdmin} = require('../controllers/login');
 const { validarJWT, validarAdmin } = require('../middlewares/validar-jwt');
+const { validateLogin } = require('../validators/login') 
 
 
 
-
-router.post('/login', loginUsuario);
+router.post('/login', validateLogin,  loginUsuario);
 
 router.post('/login/register', registroUsuario);
 

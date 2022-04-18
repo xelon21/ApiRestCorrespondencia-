@@ -4,21 +4,28 @@ const bcryptjs = require('bcryptjs');
 const { generarJWT, generarJWTAdmin } = require('../helpers/jwt');
 
 
+/** Metodo que permite el logueo de un usuario */
 const loginUsuario = (req, res = response) => {
 
     try {
-        
+        // se extraen los parametros del body        
         const {email, password} = req.body       
         
+        // se valida que el email y el password no vengan vacios
         if(!email || !password){
             res.json('Debe ingresar un usuario y contraseña')
         }else {
-            pool.query('select idUsuario, idRol, correoUsuario, password, nombreUsuario, estado from usuarios where correoUsuario = ? ', [email], async (error, result) => {  
-                                                
-                if(result.length === 0 || !(await bcryptjs.compare(password, result[0].password))){                     
 
-                    const token = await generarJWT( result[0].nombreUsuario, result[0].idRol );            
-    
+            // se ejecuta query en mysql de todos los datos del usuario segun su nombre de usuario una vez paso la validacion anterior
+            pool.query('select idUsuario, idRol, correoUsuario, password, nombreUsuario, estado from usuarios where correoUsuario = ? ', [email], async (error, result) => {
+
+                 // se corrobora que la password coincida con la que se encuentra en la base de datos                               
+                if(result.length === 0 || !(await bcryptjs.compare(password, result[0].password))){   
+
+                    // se genera el json web token 
+                    const token = await generarJWT( result[0].nombreUsuario, result[0].idRol );
+
+                    // se envia mensaje de respuesta 
                     res.json({
                         estadoMsg: true,
                         msg: 'Se ha conectado con exito',
@@ -34,20 +41,26 @@ const loginUsuario = (req, res = response) => {
                     res.json('Las credenciales no coinciden');
                 }
             })
-        }        
-        
+        }       
     } catch (error) {
         console.log(error)
     }
-    
 }
 
-
+/** Metodo que permite filtrar usuarios mediante su nombre de usuario
+ *  [ esta opcion solo puede ocuparla el administrador en su respectiva ventana ]
+ */
 const filtroUsuario = async ( req, res ) => {
+    // se extraen los parametros de la request
     const { nombreUsuario } = req.params;    
 
     try {
+        // se genera una constante query con el procedimiento de 
+        //almacenado que filtra por nombre de usuario
         const query = ` CALL SP_FILTRAUSUARIO( ? );`
+        
+        // se ejecuta la query para posteriormente enviar una 
+        // respuesta si encuentra o no encuentra al usuario filtrado
         await pool.query(query, [ nombreUsuario ],
         ( error, filas, campos ) => {
             if(!error) {
@@ -68,12 +81,18 @@ const filtroUsuario = async ( req, res ) => {
    
 }
 
+/** Metodo que permite registrar un usuario
+ * [ Esta opcion solo se encuentra en el panel de administracion ]
+ */
 const registroUsuario = async (req, res) => {
 
+    // se extraen  los datos del body
     const {idUsuario, idRol, email, password, nombreUsuario, estado } = req.body
 
+    // se genera el hash de la contraseña para postariormente almacenarla en la base de datos
     let hashPass = await bcryptjs.hash(password, 8)
 
+    // se ejecuta la query para ingresar el usuario a la base de datos y dependiendo del resultado, envia su respuesta respectiva
     pool.query('insert into usuarios set ?',{idUsuario: idUsuario, idRol: idRol, correoUsuario: email, password:hashPass, nombreUsuario:nombreUsuario, estado: estado},
     (error, result) => {
         if(error){
@@ -86,10 +105,16 @@ const registroUsuario = async (req, res) => {
     } )
 }
 
+/** Metodo que permite validar el token de un usuario al ingresarse y volver a autenticarlo */
 const validaApiKey = async ( req, res ) => {    
 
+    // se extraen los párametros de la request
     const { nombreUsuario, idRol } = req; 
     try {
+
+        // se declara una constante que almacenara la generacion del token 
+        // y se llama al metodo que genera el mismo para posteriormente devolver
+        // una respuesta segun el resultado arrojado
         const apiKey = await generarJWT( nombreUsuario, idRol ) ;    
         return res.status(200).json({
             estadoMsg: true,
@@ -108,12 +133,12 @@ const validaApiKey = async ( req, res ) => {
     }
 }
 
+/** Metodo que permite validar que el usuario que se ingreso es un administrador */
 const validaApiKeyAdmin = async ( req, res ) => { 
 
     const { nombreUsuario, idRol } = req;       
             if( idRol === 1 ){
-                const apiKey = await generarJWTAdmin( nombreUsuario, idRol ) ;
-                console.log('validaapikeyadmin: ', nombreUsuario, idRol)
+                const apiKey = await generarJWTAdmin( nombreUsuario, idRol );                
                 return res.status(200).json({
                     estadoMsg: true,
                     msg: 'Key Valida',        
@@ -130,6 +155,7 @@ const validaApiKeyAdmin = async ( req, res ) => {
     
 }
 
+/** Metodo que permite traer los roles de los usuarios */
 const traeRoles = async ( req, res ) => {
     
     await pool.query('select * from roles',(error, filas, campos) => {
@@ -141,6 +167,7 @@ const traeRoles = async ( req, res ) => {
     });
 }
 
+/** Metodo que permite traer los usuarios de la base de datos */
 const traeUsuario = async ( req, res ) => {
     await pool.query(`SELECT  idUsuario, nombreUsuario, r.rol, correoUsuario,
     estado, activacionUsuario, desactivacionUsuario 
