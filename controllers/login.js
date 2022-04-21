@@ -87,22 +87,52 @@ const filtroUsuario = async ( req, res ) => {
 const registroUsuario = async (req, res) => {
 
     // se extraen  los datos del body
-    const {idUsuario, idRol, email, password, nombreUsuario, estado } = req.body
+    const { idRol, email, password, nombreUsuario, estado, activacionUsuario, desactivacionUsuario } = req.body   
+    const query = `        
+        CALL SP_REGISTROUSUARIO( ?, ?, ?, ?, ?, ?, ? );
+    `;  
+    try {
+        // se genera el hash de la contraseña para postariormente almacenarla en la base de datos
+        let hashPass = await bcryptjs.hash(password, 8)
+        pool.query('select nombreUsuario, correoUsuario from usuarios', (error, filas, campos) =>{      
+            if(error){
+                res.json({
+                    msg: 'Error feo'
+                })
+            }else {
+                console.log(  idRol, email, password, nombreUsuario, estado, activacionUsuario, desactivacionUsuario )
+                filas.forEach(element => {
+                  if(element.nombreUsuario === nombreUsuario || element.correoUsuario === email){
+                          console.log('si entro')
+                           res.status(304).json({
+                              msg: 'El usuario ya existe',
+                              estadoMsg: false                
+                          })                        
+                  }                          
+                });
 
-    // se genera el hash de la contraseña para postariormente almacenarla en la base de datos
-    let hashPass = await bcryptjs.hash(password, 8)
-
-    // se ejecuta la query para ingresar el usuario a la base de datos y dependiendo del resultado, envia su respuesta respectiva
-    pool.query('insert into usuarios set ?',{idUsuario: idUsuario, idRol: idRol, correoUsuario: email, password:hashPass, nombreUsuario:nombreUsuario, estado: estado},
-    (error, result) => {
-        if(error){
-            console.log(error)
-            res.json('Error al ingresar el usuario')
-        }
-        res.json({
-            estadoMsg: true,
-            msg:'Usuario ingresado'})
-    } )
+                  // se ejecuta la query para ingresar el usuario a la base de datos y dependiendo del resultado, envia su respuesta respectiva
+                  pool.query( query ,[ idRol, email, hashPass, nombreUsuario, estado, activacionUsuario, desactivacionUsuario ],
+                  (error, filas, campos) => {
+                      if(error){                
+                      res.json({
+                          estadoMsg: false,
+                          msg: 'Error al ingresar el usuario'
+                      })
+                      }
+                      res.json({
+                          estadoMsg: true,
+                          msg:'Usuario ingresado'})
+                   })
+            }      
+         })
+        }catch (error) {
+                console.log(error)
+                res.status(401).json({
+                    Error: error,
+                    msg: 'Ha ocurrido un error'
+                })
+        }        
 }
 
 /** Metodo que permite validar el token de un usuario al ingresarse y volver a autenticarlo */

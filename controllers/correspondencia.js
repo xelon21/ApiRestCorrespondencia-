@@ -139,11 +139,9 @@ const filtroRangoFechas = async ( req, res ) => {
 }
 
 /** Metodo que permite ingresar una correspondencia */
-const ingresarCorrespondencia = async ( req, res ) => {
+const ingresarCorrespondencia = async ( req, res ) => {    
 
-    const usuario = os.userInfo().username
-
-    const { idTipoDocumento, idTipoEnvio, destinatario, referencia } = req.body;
+    const { idTipoDocumento, idTipoEnvio, usuario, destinatario, referencia } = req.body;
     const query = `        
         CALL SP_INGRESACORRESPONDENCIA( ?, ?, ?, ?, ? );
     `;
@@ -164,8 +162,7 @@ const ingresarCorrespondencia = async ( req, res ) => {
  */
 const modificarCorrespondencia = async ( req, res ) => {   
 
-    const usuario = os.userInfo().username;
-    const { idTipoEnvio, destinatario, referencia, estadoCorreo } = req.body;
+    const { idTipoEnvio, usuario, destinatario, referencia, estadoCorreo } = req.body;
     const { correlativo } = req.params;  
     const query2 =  `
         select * from correo where correlativo = ?

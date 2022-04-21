@@ -3,15 +3,8 @@ const morgan = require('morgan');
 const path = require('path');
 const app = express();
 const cors = require('cors');
-const helmet = require('helmet');
-//const { mysqlConnection } = require('./database/database');
+
 require('dotenv').config();
-
-
-// Coneccion con la base de datos
-//mysqlConnection();
-// Helmet
-app.use(helmet());
 
 //Directorio Publico
 app.use( express.static('public'));
@@ -23,6 +16,7 @@ app.use( cors() );
 app.use(morgan('dev'));
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
+
 
 // Variables globales
 app.use((req, res, next) => {
