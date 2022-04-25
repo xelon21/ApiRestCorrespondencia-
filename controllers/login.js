@@ -90,15 +90,12 @@ const filtroUsuario = async ( req, res ) => {
 const registroUsuario = async (req, res) => {
 
     // se extraen  los datos del body
-    const { idRol, email, password, nombreUsuario, estado, activacionUsuario, desactivacionUsuario, fech1, fech2 } = req.body   
+    const { idRol, email, password, nombreUsuario, estado, fech1, fech2 } = req.body   
     const query = `        
         CALL SP_REGISTROUSUARIO( ?, ?, ?, ?, ?, ?, ? );
     `;  
     let existe = false  
-    console.log(req.body.activacionUsuario)
-    console.log(req.body.desactivacionUsuario)
-    console.log(req.body.fech1)
-    console.log(req.body.fech2)
+    
     try {
         // se genera el hash de la contraseña para postariormente almacenarla en la base de datos
         let hashPass = await bcryptjs.hash(password, 8)
