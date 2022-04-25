@@ -4,13 +4,13 @@ const { loginUsuario, registroUsuario,
     validaApiKey, filtroUsuario,
     traeRoles, traeUsuario, validaApiKeyAdmin} = require('../controllers/login');
 const { validarJWT, validarAdmin } = require('../middlewares/validar-jwt');
-const { validateLogin } = require('../validators/login') 
+const { validateLogin, validateRegistro } = require('../validators/login') 
 
 
 
 router.post('/login', validateLogin,  loginUsuario);
 
-router.post('/login/register', registroUsuario);
+router.post('/login/register', validateRegistro, registroUsuario);
 
 router.get('/login/validaKey', validarJWT , validaApiKey);
 

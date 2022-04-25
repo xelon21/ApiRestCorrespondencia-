@@ -16,6 +16,33 @@ const validateLogin = [
     }
 ]
 
+const validateRegistro = [
+    check('idRol')
+        .exists()
+        .isNumeric()
+        .notEmpty(),
+    check('email')
+        .exists()
+        .isEmail()
+        .notEmpty(),
+    check('password')
+        .exists()
+        .isStrongPassword()
+        .notEmpty(),
+    check('nombreUsuario')
+        .exists()
+        .isString()        
+        .notEmpty(),
+    check('estado')
+        .exists()
+        .isBoolean(),       
+    check('activacionUsuario')
+        .isString(),
+    check('desactivacionUsuario')
+        .isString()   
+]
+
 module.exports = {
-    validateLogin
+    validateLogin,
+    validateRegistro
 }

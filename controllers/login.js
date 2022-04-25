@@ -9,18 +9,21 @@ const loginUsuario = (req, res = response) => {
 
     try {
         // se extraen los parametros del body        
-        const {email, password} = req.body       
+        const {email, password} = req.body  
+        console.log(email, password)     
         
         // se valida que el email y el password no vengan vacios
         if(!email || !password){
             res.json('Debe ingresar un usuario y contraseña')
         }else {
 
+            
             // se ejecuta query en mysql de todos los datos del usuario segun su nombre de usuario una vez paso la validacion anterior
             pool.query('select idUsuario, idRol, correoUsuario, password, nombreUsuario, estado from usuarios where correoUsuario = ? ', [email], async (error, result) => {
 
-                 // se corrobora que la password coincida con la que se encuentra en la base de datos                               
-                if(result.length === 0 || !(await bcryptjs.compare(password, result[0].password))){   
+
+                // se corrobora que la password coincida con la que se encuentra en la base de datos                               
+                if(!result.length === 0 || (await bcryptjs.compare(password, result[0].password))){   
 
                     // se genera el json web token 
                     const token = await generarJWT( result[0].nombreUsuario, result[0].idRol );
@@ -87,43 +90,43 @@ const filtroUsuario = async ( req, res ) => {
 const registroUsuario = async (req, res) => {
 
     // se extraen  los datos del body
-    const { idRol, email, password, nombreUsuario, estado, activacionUsuario, desactivacionUsuario } = req.body   
+    const { idRol, email, password, nombreUsuario, estado, activacionUsuario, desactivacionUsuario, fech1, fech2 } = req.body   
     const query = `        
         CALL SP_REGISTROUSUARIO( ?, ?, ?, ?, ?, ?, ? );
     `;  
+    let existe = false  
+    console.log(req.body.activacionUsuario)
+    console.log(req.body.desactivacionUsuario)
+    console.log(req.body.fech1)
+    console.log(req.body.fech2)
     try {
         // se genera el hash de la contraseña para postariormente almacenarla en la base de datos
         let hashPass = await bcryptjs.hash(password, 8)
-        pool.query('select nombreUsuario, correoUsuario from usuarios', (error, filas, campos) =>{      
+        await pool.query('select nombreUsuario, correoUsuario from usuarios', (error, filas, campos) =>{      
             if(error){
-                res.json({
-                    msg: 'Error feo'
-                })
+                console.log(error)                
             }else {
-                console.log(  idRol, email, password, nombreUsuario, estado, activacionUsuario, desactivacionUsuario )
+                console.log(  idRol, email, password, nombreUsuario, estado, fech1, fech2 )
                 filas.forEach(element => {
-                  if(element.nombreUsuario === nombreUsuario || element.correoUsuario === email){
-                          console.log('si entro')
-                           res.status(304).json({
-                              msg: 'El usuario ya existe',
-                              estadoMsg: false                
-                          })                        
-                  }                          
+                  if(element.nombreUsuario === nombreUsuario || element.correoUsuario === email){ 
+                      existe = true;                                       
+                  }                 
                 });
-
-                  // se ejecuta la query para ingresar el usuario a la base de datos y dependiendo del resultado, envia su respuesta respectiva
-                  pool.query( query ,[ idRol, email, hashPass, nombreUsuario, estado, activacionUsuario, desactivacionUsuario ],
-                  (error, filas, campos) => {
-                      if(error){                
-                      res.json({
-                          estadoMsg: false,
-                          msg: 'Error al ingresar el usuario'
-                      })
-                      }
-                      res.json({
-                          estadoMsg: true,
-                          msg:'Usuario ingresado'})
-                   })
+                 // se ejecuta la query para ingresar el usuario a la base de datos y dependiendo del resultado, envia su respuesta respectiva
+                 pool.query( query ,[ idRol, email, hashPass, nombreUsuario, estado, fech1, fech2 ],
+                    (error, filas, campos) => {                        
+                        if( existe ){                
+                        res.json({
+                            estadoMsg: false,
+                            msg: 'Error al ingresar el usuario'
+                        })
+                        existe = false;                        
+                        }else if(!existe) {
+                            res.json({
+                                estadoMsg: true,
+                                msg:'Usuario ingresado'})                              
+                        }
+                     })
             }      
          })
         }catch (error) {
@@ -166,22 +169,26 @@ const validaApiKey = async ( req, res ) => {
 /** Metodo que permite validar que el usuario que se ingreso es un administrador */
 const validaApiKeyAdmin = async ( req, res ) => { 
 
-    const { nombreUsuario, idRol } = req;       
-            if( idRol === 1 ){
-                const apiKey = await generarJWTAdmin( nombreUsuario, idRol );                
-                return res.status(200).json({
-                    estadoMsg: true,
-                    msg: 'Key Valida',        
-                    nombre: nombreUsuario,
-                    idRol: idRol,
-                    apiKey: apiKey
-                }) 
-            } else {
-                return res.status(401).json({
-                    Error: error,
-                    msg: 'No valido'
-                })
-             }    
+    try {
+        const { nombreUsuario, idRol } = req;       
+                if( idRol === 1 ){
+                    const apiKey = await generarJWTAdmin( nombreUsuario, idRol );                
+                    return res.status(200).json({
+                        estadoMsg: true,
+                        msg: 'Key Valida',        
+                        nombre: nombreUsuario,
+                        idRol: idRol,
+                        apiKey: apiKey
+                    }) 
+                }                
+                
+            } catch (error) {
+        return res.status(401).json({
+            Error: error,
+            msg: 'No valido'
+        })
+        
+    }
     
 }
 

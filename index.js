@@ -14,18 +14,19 @@ app.use( cors() );
 
 // middlewares
 app.use(morgan('dev'));
-app.use(express.urlencoded({extended: false}));
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-
 
 // Variables globales
 app.use((req, res, next) => {
-    next();
+  next();
 })
 
 // Rutas
-app.use('/api/correspondencia',require('./routes/correspondencia'));
-app.use('/api/correspondencia',require('./routes/login'));
+app.use('/api/correspondencia', 
+  require('./routes/correspondencia'));
+app.use('/api/correspondencia', 
+  require('./routes/login'));
 
 // Manejas demas rutas
 app.get('*', ( req, res ) => {
@@ -34,5 +35,5 @@ app.get('*', ( req, res ) => {
 
 // inicio de servidor
 app.listen( process.env.PORT, () => {
-    console.log(`Servidor corriendo en el puerto ${ process.env.PORT}`);
+  console.log(`Servidor corriendo en el puerto ${process.env.PORT}`);
 }); 
