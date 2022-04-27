@@ -60,7 +60,7 @@ const filtroUsuario = async ( req, res ) => {
     try {
         // se genera una constante query con el procedimiento de 
         //almacenado que filtra por nombre de usuario
-        const query = ` CALL SP_FILTRAUSUARIO( ? );`
+        const query = ` CALL SP_FILTRAUSUARIONOMBRE( ? );`
         
         // se ejecuta la query para posteriormente enviar una 
         // respuesta si encuentra o no encuentra al usuario filtrado
@@ -102,8 +102,7 @@ const registroUsuario = async (req, res) => {
         await pool.query('select nombreUsuario, correoUsuario from usuarios', (error, filas, campos) =>{      
             if(error){
                 console.log(error)                
-            }else {
-                console.log(  idRol, email, password, nombreUsuario, estado, fech1, fech2 )
+            }else {                
                 filas.forEach(element => {
                   if(element.nombreUsuario === nombreUsuario || element.correoUsuario === email){ 
                       existe = true;                                       
@@ -189,6 +188,32 @@ const validaApiKeyAdmin = async ( req, res ) => {
     
 }
 
+const filtroIdUsuario = async ( req, res ) => {
+    const { idUsuario } = req.params;
+
+    try {
+        const query = ` call SP_FILTROUSUARIO( ? );`
+        await pool.query(query, [ idUsuario ],
+        ( error, filas, campos ) => {
+            if(!error) {                
+                const arreglo = filas[0]     
+                res.json(arreglo[0]);
+            } else {
+                res.json({
+                    msg: 'No hay nada'
+                })
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        res.json({
+             Error: error,
+             msg: 'Usuario no existe'
+        })
+    }
+   
+}
+
 /** Metodo que permite traer los roles de los usuarios */
 const traeRoles = async ( req, res ) => {
     
@@ -215,6 +240,164 @@ const traeUsuario = async ( req, res ) => {
     })
 } 
 
+const desactivarUsuario = async ( req, res ) => {
+    const { estado, desactivacionUsuario } = req.body;
+    const { idUsuario } = req.params;
+    const query2 = `
+            select * from usuarios where idUsuario = ?
+    `;
+              
+    try {
+        if( estado ){
+            const fecha = new Date();   
+            let activo = false;         
+            await pool.query(query2, [idUsuario], (error, filas, campos) => {
+                if(!error) {
+                    const query = `
+                        Call SP_MODIFICARESTADO ( ?, ?, ?);
+                    `;
+                    pool.query(query, [ idUsuario, activo, fecha ],
+                        (error, filas, campos) => {
+                            if(!error){
+                                res.json({Status: 'Se a actualizado el estado'});
+                            }else{
+                                res.json({
+                                    msg: 'error al ingresar los datos'
+                                })
+                            }
+                        })
+                }else {
+                    
+                res.json({
+                    status: 'No se puede modificar',
+                    msg: 'No se pueden modificar los datos',                                      
+                });  
+                }
+            })
+        } else {
+            let activo = true;       
+            await pool.query(query2, [idUsuario], (error, filas, campos) => {
+                if(!error) {
+                    const query = `
+                        Call SP_MODIFICARESTADO ( ?, ?, ?);
+                    `;
+                    pool.query(query, [ idUsuario, activo, desactivacionUsuario ],
+                        (error, filas, campos) => {
+                            if(!error){
+                                res.json({Status: 'Se a actualizado la fecha de desactivacion'});
+                            }else{                                    
+                                res.json({
+                                    msg: 'No se a podido ingresar los datos'
+                                })
+                            }
+                        })
+                }else {
+                    
+                res.json({
+                    status: 'No se puede modificar',
+                    msg: 'No se pueden modificar los datos',                                      
+                });  
+                }
+            })
+
+        }
+        
+    } catch (error) {
+        console.log(error)
+        res.json({
+            status: 'No se puede modificar',
+            msg: 'No se pueden modificar los datos',                                      
+        });  
+        
+    }
+}
+
+const modificarPassword = async ( req, res ) => {   
+
+    const { password, password2 } = req.body 
+    const { idUsuario } = req.params;  
+    const query2 =  `
+        select * from usuarios where idUsuario = ?
+    ` ;  
+    try {       
+        if(password != password2){
+            res.json({                
+                msg: 'Las contraseñas no coinciden',                                      
+            });
+        }else {
+
+            let hashPass = await bcryptjs.hash(password, 8)
+
+            await pool.query(query2, [idUsuario], (error, filas, campos) => {
+                if(!error) { 
+                        const query = `
+                                CALL SP_MODIFICARPASSWORD( ?, ? );
+                            `;                   
+                            pool.query(query, [ idUsuario, hashPass ],
+                                ( error, filas, campos ) => {
+                                    if(!error) {
+                                        res.json({Status: 'Se a actualizado la contraseña'});
+                                    } else {
+                                        console.log(error);
+                                        res.json({
+                                            msg: 'error al ingresar los datos'
+                                        })
+                                    } 
+                                })
+                            } else{
+                                res.json({
+                                    status: 'No se puede modificar',
+                                    msg: 'No se puede modificar la contraseña',                                      
+                                });  
+                            }
+                        })  
+        }
+    } catch (error) {
+        console.log(error)
+        res.json({
+            status: 'No se puede modificar',
+            msg: 'No se puede modificar la contraseña',                                      
+        });  
+    }  
+}
+
+const modificarUsuario = async ( req, res ) => {   
+
+    const { idRol, correoUsuario, nombreUsuario } = req.body 
+    const { idUsuario } = req.params;  
+    const query2 =  `
+        select * from usuarios where idUsuario = ?
+    ` ;    
+    await pool.query(query2, [idUsuario], (error, filas, campos) => {
+        if(!error) {            
+            if( idUsuario === filas[0].idUsuario ){ 
+                const query = `
+                        CALL SP_MODIFICARUSUARIO( ?, ?, ?, ? );
+                    `;                   
+                    pool.query(query, [ idUsuario, idRol, correoUsuario, nombreUsuario ],
+                        ( error, filas, campos ) => {
+                            if(!error) {
+                                res.json({Status: 'Se a actualizado el usuario'});
+                            } else {
+                                console.log(error);
+                                res.json({
+                                    msg: 'error al ingresar los datos'
+                                })
+                            } 
+                        });
+            }else {                
+                res.json({
+                    status: 'No se puede modificar',
+                    msg: 'No se puede modificar el usuario',                                      
+                });  
+            }
+        }else {
+            console.log(error)
+        }       
+    })     
+}
+
+
 module.exports = {
     loginUsuario,
     registroUsuario,
@@ -222,7 +405,11 @@ module.exports = {
     traeRoles,
     traeUsuario,
     filtroUsuario,
-    validaApiKeyAdmin
+    validaApiKeyAdmin,
+    modificarUsuario,
+    filtroIdUsuario,
+    modificarPassword,
+    desactivarUsuario
 }
 
 
