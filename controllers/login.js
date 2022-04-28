@@ -10,7 +10,7 @@ const loginUsuario = (req, res = response) => {
     try {
         // se extraen los parametros del body        
         const {email, password} = req.body  
-        console.log(email, password)     
+        //console.log(email, password)     
         
         // se valida que el email y el password no vengan vacios
         if(!email || !password){
@@ -21,7 +21,7 @@ const loginUsuario = (req, res = response) => {
             // se ejecuta query en mysql de todos los datos del usuario segun su nombre de usuario una vez paso la validacion anterior
             pool.query('select idUsuario, idRol, correoUsuario, password, nombreUsuario, estado from usuarios where correoUsuario = ? ', [email], async (error, result) => {
 
-
+                
                 // se corrobora que la password coincida con la que se encuentra en la base de datos                               
                 if(!result.length === 0 || (await bcryptjs.compare(password, result[0].password))){   
 
@@ -327,7 +327,7 @@ const modificarPassword = async ( req, res ) => {
         }else {
 
             let hashPass = await bcryptjs.hash(password, 8)
-
+            console.log(hashPass)
             await pool.query(query2, [idUsuario], (error, filas, campos) => {
                 if(!error) { 
                         const query = `
@@ -369,8 +369,10 @@ const modificarUsuario = async ( req, res ) => {
         select * from usuarios where idUsuario = ?
     ` ;    
     await pool.query(query2, [idUsuario], (error, filas, campos) => {
-        if(!error) {            
-            if( idUsuario === filas[0].idUsuario ){ 
+        if(!error) {    
+                   
+            if( filas[0].idUsuario ){ 
+               
                 const query = `
                         CALL SP_MODIFICARUSUARIO( ?, ?, ?, ? );
                     `;                   
