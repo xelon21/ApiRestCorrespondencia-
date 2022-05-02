@@ -1,6 +1,6 @@
 const { response } = require('express');
 const pool = require('../database/database');
-
+const { logCorrespondencia } = require('../helpers/logger')
 
 
 
@@ -74,14 +74,17 @@ const buscarCorrelativoModificar = async ( req, res ) => {
         await pool.query( query, [ correlativo ],
             (error, filas, campos ) => {
                 if(!error) {
+                    logCorrespondencia.info(`Se encontro una correspondencia`)
                     res.json(filas[0]);
                 } else {
+                    logCorrespondencia.info(`No se encontraron correspondencias asociadas al correlativo: [${correlativo}]`)
                     res.json({
                         msg: 'no hay nada'
                     })
                 }
             });
     } catch (error) {
+        logCorrespondencia.info(`No existe el correlativo buscado: [${correlativo}]`)
         console.log(error);
         res.json({
              Error: error,
@@ -149,8 +152,10 @@ const ingresarCorrespondencia = async ( req, res ) => {
         destinatario, referencia ],
         ( error, filas, campos ) => {
             if(!error) {
+                logCorrespondencia.info(`El usuario [${usuario}] agrego una correspondencia`)
                 res.json({Status: 'Se ha guardado la correspondencia'});
             } else {
+                logCorrespondencia.info(`no se puede ingresar la correspondencia`)
                 console.log(error);
             }
         });
@@ -170,6 +175,7 @@ const modificarCorrespondencia = async ( req, res ) => {
     await pool.query(query2, [correlativo], (error, filas, campos) => {       
         if(!error){            
             if( filas[0].estadoCorreo === 'ANULADO' ) {
+                logCorrespondencia.info(`El usuario intento anular una correspondencia ` )
             res.json({
                 status: 'No se puede modificar',
                 msg: 'la correspondencia ya se encuentra anulada'                
@@ -184,12 +190,15 @@ const modificarCorrespondencia = async ( req, res ) => {
                     pool.query(query, [ idTipoEnvio, destinatario, referencia, correlativo, estadoCorreo ],
                         ( error, filas, campos ) => {
                             if(!error) {
+                                logCorrespondencia.info(`Se actualizo la correspondencia`)
                                 res.json({Status: 'Se a actualizado la correspondencia'});
                             } else {
+                                logCorrespondencia.info(`ocurrio un error al modificar la correspondencia[en la query]`)
                                 console.log(error);
                             }
                         });
                 }else {
+                    logCorrespondencia.info(`ocurrio un error al modificar la correspondencia[el usuario no es el mismo [${usuario}]]`)
                     res.json({
                         status: 'No se puede modificar',
                         msg: 'Error al modificar la correspondencia',
@@ -198,6 +207,7 @@ const modificarCorrespondencia = async ( req, res ) => {
                 }
             }
         }else {
+            logCorrespondencia.info(`ocurrio un error al modificar la correspondencia[error al llamar el metodo]`)
             console.log(error)
         }       
     })     

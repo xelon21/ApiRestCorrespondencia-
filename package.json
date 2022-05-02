@@ -27,7 +27,8 @@
     "nodemon": "^2.0.15",
     "passport": "^0.5.2",
     "passport-local": "^1.0.0",
-    "timeago.js": "^4.0.2"
+    "timeago.js": "^4.0.2",
+    "winston": "^3.7.2"
   },
   "devDependencies": {
     "eslint": "^8.14.0",

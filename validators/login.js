@@ -16,6 +16,7 @@ const validateLogin = [
     }
 ]
 
+/** Validaciones del registro de un usuario */
 const validateRegistro = [
     check('idRol')
         .exists()
@@ -42,7 +43,20 @@ const validateRegistro = [
         .isString()   
 ]
 
+// /** Validaciones de contraseñas para el metodo que permite cambiar la contraseña */
+// const validaPassword = [
+//     check('password')
+//         .exists()
+//         .isStrongPassword()
+//         .notEmpty(),
+//     check('password2')
+//         .exists()
+//         .isStrongPassword()
+//         .notEmpty()
+// ]
+
 module.exports = {
     validateLogin,
-    validateRegistro
+    validateRegistro,
+    
 }

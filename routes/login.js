@@ -4,7 +4,8 @@ const { loginUsuario, registroUsuario,
     validaApiKey, filtroUsuario,
     traeRoles, traeUsuario, validaApiKeyAdmin,
     modificarUsuario, filtroIdUsuario,
-    modificarPassword, desactivarUsuario} = require('../controllers/login');
+    modificarPassword, desactivarUsuario,
+    } = require('../controllers/login');
 const { validarJWT, validarAdmin } = require('../middlewares/validar-jwt');
 const { validateLogin, validateRegistro } = require('../validators/login') 
 
