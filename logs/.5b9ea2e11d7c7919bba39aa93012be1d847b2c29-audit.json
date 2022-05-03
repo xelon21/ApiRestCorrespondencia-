@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "D:\\Angular\\Angular\\RestApiCorrespondencia\\logs\\.5b9ea2e11d7c7919bba39aa93012be1d847b2c29-audit.json",
+    "files": [
+        {
+            "date": 1651601259007,
+            "name": "D:\\Angular\\Angular\\RestApiCorrespondencia\\logs\\logAdministracion 03-05-2022.log",
+            "hash": "c867009844026469b398c6e1b0e73013"
+        }
+    ],
+    "hashType": "md5"
+}
