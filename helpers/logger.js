@@ -3,6 +3,7 @@ const winston = require('winston');
 require('winston-daily-rotate-file');
 
 
+
 const fileRotateTransport = new winston.transports.DailyRotateFile({
     filename: `${__dirname}/../logs/logCorrespondencia %DATE%.log`,
     datePattern: 'DD-MM-YYYY',

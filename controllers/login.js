@@ -4,13 +4,32 @@ const bcryptjs = require('bcryptjs');
 const { generarJWT, generarJWTAdmin } = require('../helpers/jwt');
 const { logLogin } = require('../helpers/logger')
 
+var estadolog = false;
+
+const usuariologout = (req, res) => {
+    try {
+        const { logeado } = req.body
+
+        if(!logeado){
+            return res.status(403).json('El usuario no puede deslogearse')
+        }else{
+            estadolog = false;
+        }
+        
+    } catch (error) {
+        logLogin.error(`Error deslogearse ${usuario}`)
+        console.log(error)
+        
+    }
+}
+
 /** Metodo que permite el logueo de un usuario */
 const loginUsuario = (req, res = response) => {
 
     try {
         // se extraen los parametros del body        
         const {email, password} = req.body  
-        //console.log(email, password)     
+        
         
         // se valida que el email y el password no vengan vacios
         if(!email || !password){
@@ -18,18 +37,18 @@ const loginUsuario = (req, res = response) => {
             
         }else {
             // se ejecuta query en mysql de todos los datos del usuario segun su nombre de usuario una vez paso la validacion anterior
-            pool.query('select idUsuario, idRol, correoUsuario, password, nombreUsuario, estado from usuarios where correoUsuario = ? ', [email], async (error, result) => {
-                
+            pool.query('select idUsuario, idRol, correoUsuario, password, nombreUsuario, estado from usuarios where correoUsuario = ? ', [email], async (error, result) => {                
                 if(!result[0]){                    
                     return res.status(404).json('No se puede ingresar');
                 }else{
                     // se corrobora que la password coincida con la que se encuentra en la base de datos                               
-                    if(!result.length === 0 || (await bcryptjs.compare(password, result[0].password))){  
+                    if(!result.length === 0 || (await bcryptjs.compare(password, result[0].password))){                                                
+                        
                         const usuario = result[0].nombreUsuario; 
-    
+        
                         // se genera el json web token 
                         const token = await generarJWT( result[0].nombreUsuario, result[0].idRol );
-                        logLogin.info(`Usuario autenticado: ${usuario}`)
+                        logLogin.info(`Usuario autenticado: ${result[0].nombreUsuario}`)
                         // se envia mensaje de respuesta 
                         res.json({
                             estadoMsg: true,
@@ -39,17 +58,18 @@ const loginUsuario = (req, res = response) => {
                             email: result[0].correoUsuario,
                             idRol: result[0].idRol,                        
                             nombre: result[0].nombreUsuario,                        
-                            estado: result[0].estado
-                        });                    
+                            estado: result[0].estado,                            
+                        });
+                                              
                     }else {   
-                        logLogin.warn(`credenciales no coinciden: ${usuario}`)                 
+                        logLogin.warn(`credenciales no coinciden: ${result[0].nombreUsuario}`)                 
                         res.status(404).json('Las credenciales no coinciden');
                     }
                 }
             })
         }       
     } catch (error) {
-        logLogin.error(`Error al ingresar: ${usuario}`)
+        logLogin.error(`Error al ingresar: ${error}`)
         console.log(error)
     }
 }
@@ -480,7 +500,8 @@ module.exports = {
     modificarUsuario,
     filtroIdUsuario,
     modificarPassword,
-    desactivarUsuario
+    desactivarUsuario,
+    usuariologout
 }
 
 

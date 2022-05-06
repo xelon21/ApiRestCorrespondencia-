@@ -30,10 +30,10 @@ const mostrarCorrespondencia = async ( req, res = response) => {
 
 /** Metodo que permite mostrar el ultimo correo ingresado */
 const muestraUltimo = async ( req, res ) => {
-    await pool.query(`SELECT MAX(correlativo) as idCorrespondencia FROM correo;`,
+    await pool.query(`select correlativo from correo where idCorrespondencia = (SELECT MAX(idCorrespondencia) as correlativo FROM correo);`,
                                  (error, filas, campos) => {
         if(!error) {
-            res.status(200).json(filas);
+            res.status(200).json(filas[0]);
         }else {
             console.log(error);
         }
