@@ -144,16 +144,23 @@ const filtroRangoFechas = async ( req, res ) => {
 /** Metodo que permite ingresar una correspondencia */
 const ingresarCorrespondencia = async ( req, res ) => {    
 
-    const { idTipoDocumento, idTipoEnvio, usuario, destinatario, referencia } = req.body;
+    const { idTipoDocumento, idTipoEnvio, usuario, destinatario, referencia  } = req.body;
     const query = `        
         CALL SP_INGRESACORRESPONDENCIA( ?, ?, ?, ?, ? );
     `;
+
     await pool.query(query, [idTipoDocumento, idTipoEnvio, usuario,
         destinatario, referencia ],
         ( error, filas, campos ) => {
             if(!error) {
                 logCorrespondencia.info(`El usuario [${usuario}] agrego una correspondencia`)
-                res.json({Status: 'Se ha guardado la correspondencia'});
+                pool.query('select correlativo from correo where idCorrespondencia = (SELECT MAX(idCorrespondencia) as correlativo FROM correo);', (error, filas, campos) => {
+                    res.status(200).json({                        
+                        status: 'Se ha guardado la correspondencia',
+                        correlativo: filas[0].correlativo
+                    });                    
+                })               
+
             } else {
                 logCorrespondencia.info(`no se puede ingresar la correspondencia`)
                 console.log(error);

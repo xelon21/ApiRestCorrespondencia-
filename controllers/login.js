@@ -114,47 +114,42 @@ const filtroUsuario = async ( req, res ) => {
 const registroUsuario = async (req, res) => {
 
     // se extraen  los datos del body
-    const { idRol, email, password, nombreUsuario, estado, fech1, fech2 } = req.body   
+    const { idRol, email, password, nombreUsuario, estado, fech1 } = req.body   
     const query = `        
-        CALL SP_REGISTROUSUARIO( ?, ?, ?, ?, ?, ?, ? );
-    `;  
-    let existe = false  
-    
+        CALL SP_REGISTROUSUARIO( ?, ?, ?, ?, ?, ? );
+    `;      
+       
     try {
         // se genera el hash de la contraseña para postariormente almacenarla en la base de datos
         let hashPass = await bcryptjs.hash(password, 8)
-        await pool.query('select nombreUsuario, correoUsuario from usuarios', (error, filas, campos) =>{      
-            if(error){
-                logLogin.error(`Error al ingresar los datos`)
-                console.log(error)                
-            }else {       
+        let cont = 0;
+        pool.query('select nombreUsuario, correoUsuario from usuarios', (error, filas, campos) =>{                                                  
                 /** Se recorre el resultado de la query anterior para validar si existe el usuario */         
-                filas.forEach(element => {
+                filas.forEach(element => {                
                     /** Si exite el nombre de usuario y el correo, entonces devuelve verdadero */
-                  if(element.nombreUsuario === nombreUsuario || element.correoUsuario === email){                       
-                      existe = true;                                       
-                  }                 
-                });
-                 /** Una vez que no exista el usuario dentro de la base de datos, se envian los datos de creacion */
-                 pool.query( query ,[ idRol, email, hashPass, nombreUsuario, estado, fech1, fech2 ],
-                    (error, filas, campos) => { 
-                        /** Se valida la confirmacion del FOREACH anterior, si el usuario existe, no se crea el usuario
-                         * pero si no esxiste, se crea el Usuario*/                       
-                        if( existe ){                
+                  if(element.nombreUsuario === nombreUsuario || element.correoUsuario === email){  
+                            cont++;
+                  }
+                })                 
+                /** Se valida la confirmacion del FOREACH anterior, si el usuario existe, no se crea el usuario
+                 * pero si no esxiste, se crea el Usuario*/  
+                         
+                if(cont >= 1){                                 
+                    res.json({
+                        estadoMsg: false,
+                        msg: 'Error al ingresar el usuario'
+                    })                                             
+                }else{
+                /** Una vez que no exista el usuario dentro de la base de datos, se envian los datos de creacion */
+                pool.query( query ,[ idRol, email, hashPass, nombreUsuario, estado, fech1 ],
+                    (error, filas, campos) => {                   
+                        logLogin.info(`Se ingreso un usuario`)
                         res.json({
-                            estadoMsg: false,
-                            msg: 'Error al ingresar el usuario'
-                        })
-                        existe = false;                        
-                        }else if(!existe) {
-                            logLogin.info(`Se ingreso un usuario`)
-                            res.json({
-                                estadoMsg: true,
-                                msg:'Usuario ingresado'})                              
-                        }
-                     })
-            }      
-         })
+                            estadoMsg: true,
+                            msg:'Usuario ingresado'})                              
+                    }
+                )}  
+            })
         }catch (error) {
             logLogin.error(`Error al ingresar un usuario ${error}`)
                 console.log(error)
@@ -164,6 +159,20 @@ const registroUsuario = async (req, res) => {
                 })
         }        
 }
+
+function validaSiExisten(nombreUsuario, email) {
+
+    
+   
+        if(cont >= 1){
+            return true;
+        }else {
+            return false
+        }
+        
+    }
+
+
 
 /** Metodo que permite validar el token de un usuario al ingresarse y volver a autenticarlo */
 const validaApiKey = async ( req, res ) => {    
