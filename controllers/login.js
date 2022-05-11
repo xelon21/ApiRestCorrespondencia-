@@ -4,22 +4,76 @@ const bcryptjs = require('bcryptjs');
 const { generarJWT, generarJWTAdmin } = require('../helpers/jwt');
 const { logLogin } = require('../helpers/logger')
 
-var estadolog = false;
 
-const usuariologout = (req, res) => {
+const ingresoUsuarioLogeado = (req, res = response ) => {
     try {
-        const { logeado } = req.body
-
-        if(!logeado){
-            return res.status(403).json('El usuario no puede deslogearse')
-        }else{
-            estadolog = false;
+        const {email} = req.body        
+        if(!email){
+            res.json('Debe ingresar un email')
+        }else {
+        
+            pool.query('select email from estadologin where email = ? ', [email], async ( error, result ) => {
+               
+                if(result.length === 0){
+                    pool.query(' call SP_USUARIOLOGIN ( ? ); ', [email], (error, filas, campos) => {
+                        if(error){
+                            res.json('Ocurrio un problema');
+                        }else {
+                            res.json({
+                                msg: 'Usuario Conectado',
+                                usuario: filas[0],
+                                estado: false
+                            })
+                        }
+                    })
+                }else {
+                    res.json({
+                        msg: 'El usuario ya se encuentra conectado',
+                        estado: true
+                    })
+                }
+            })
         }
         
     } catch (error) {
-        logLogin.error(`Error deslogearse ${usuario}`)
         console.log(error)
+        res.status(404).json(' No se pudo hacer la operacion')
+    }
+}
+
+const usuarioLogout = (req, res = response ) => {
+    try {
+        const {email} = req.params
+        console.log(email)
+        if(!email){
+            res.json('Debe ingresar un email')
+        }else {
+            pool.query('select email from estadologin where email = ? ', [email], async ( error, result ) => {
+                console.log(result.length)
+                if(result.length >=1){
+                    pool.query(' call SP_USUARIOLOGOUT ( ? ); ', [email], (error, filas, campos) => {
+                        if(error){
+                            res.json('Ocurrio un problema');
+                        }else {
+                            res.json({
+                                msg: 'Usuario Desconectado Correctamente',
+                                usuario: filas[0],
+                                estado: false
+                            })
+                        }
+                    })
+                }else {
+                    res.json({
+                        msg: 'El usuario no se encuentra conectado',
+                        estado: true
+                    })
+                }
+            })
+        }
         
+    } catch (error) {
+        console.log(error)
+        res.status(404).json(' No se pudo hacer la operacion')
     }
 }
 
@@ -35,38 +89,40 @@ const loginUsuario = (req, res = response) => {
         if(!email || !password){
            return res.json('Debe ingresar un usuario y contraseña')
             
-        }else {
-            // se ejecuta query en mysql de todos los datos del usuario segun su nombre de usuario una vez paso la validacion anterior
-            pool.query('select idUsuario, idRol, correoUsuario, password, nombreUsuario, estado from usuarios where correoUsuario = ? ', [email], async (error, result) => {                
-                if(!result[0]){                    
-                    return res.status(404).json('No se puede ingresar');
-                }else{
-                    // se corrobora que la password coincida con la que se encuentra en la base de datos                               
-                    if(!result.length === 0 || (await bcryptjs.compare(password, result[0].password))){                                                
+        }else {    
+                pool.query('select idUsuario, idRol, correoUsuario, password, nombreUsuario, estado from usuarios where correoUsuario = ? ', [email], async (error, result) => {                
+                    if(!result[0] ){                    
+                        return res.status(404).json('No se puede ingresar');
+                    }else{
                         
-                        const usuario = result[0].nombreUsuario; 
-        
-                        // se genera el json web token 
-                        const token = await generarJWT( result[0].nombreUsuario, result[0].idRol );
-                        logLogin.info(`Usuario autenticado: ${result[0].nombreUsuario}`)
-                        // se envia mensaje de respuesta 
-                        res.json({
-                            estadoMsg: true,
-                            msg: 'Se ha conectado con exito',
-                            apiKey: token,
-                            uid: result[0].idUsuario,
-                            email: result[0].correoUsuario,
-                            idRol: result[0].idRol,                        
-                            nombre: result[0].nombreUsuario,                        
-                            estado: result[0].estado,                            
-                        });
-                                              
-                    }else {   
-                        logLogin.warn(`credenciales no coinciden: ${result[0].nombreUsuario}`)                 
-                        res.status(404).json('Las credenciales no coinciden');
+                            //const usuario = result[0].nombreUsuario; 
+                            // se corrobora que la password coincida con la que se encuentra en la base de datos                               
+                            if(!result.length === 0 || (await bcryptjs.compare(password, result[0].password))){                                                
+                              // se genera el json web token 
+                              const token = await generarJWT( result[0].nombreUsuario, result[0].idRol );
+                              logLogin.info(`Usuario autenticado: ${result[0].nombreUsuario}`)
+                              // se envia mensaje de respuesta 
+                              res.json({
+                                  estadoMsg: true,
+                                  msg: 'Se ha conectado con exito',
+                                  apiKey: token,
+                                  uid: result[0].idUsuario,
+                                  email: result[0].correoUsuario,
+                                  idRol: result[0].idRol,                        
+                                  nombre: result[0].nombreUsuario,                        
+                                  estado: result[0].estado,                            
+                              });  
+                              
+                            }else{
+                            logLogin.warn(`credenciales no coinciden: ${result[0].nombreUsuario}`)                 
+                            res.status(404).json('Las credenciales no coinciden');
+                            
+                        }
                     }
-                }
-            })
+                })
+          
+            // se ejecuta query en mysql de todos los datos del usuario segun su nombre de usuario una vez paso la validacion anterior
+            
         }       
     } catch (error) {
         logLogin.error(`Error al ingresar: ${error}`)
@@ -160,25 +216,12 @@ const registroUsuario = async (req, res) => {
         }        
 }
 
-function validaSiExisten(nombreUsuario, email) {
-
-    
-   
-        if(cont >= 1){
-            return true;
-        }else {
-            return false
-        }
-        
-    }
-
-
 
 /** Metodo que permite validar el token de un usuario al ingresarse y volver a autenticarlo */
 const validaApiKey = async ( req, res ) => {    
 
     // se extraen los párametros de la request
-    const { nombreUsuario, idRol } = req; 
+    const { nombreUsuario, idRol} = req; 
     try {
 
         // se declara una constante que almacenara la generacion del token 
@@ -510,7 +553,9 @@ module.exports = {
     filtroIdUsuario,
     modificarPassword,
     desactivarUsuario,
-    usuariologout
+    // usuariologout,
+    ingresoUsuarioLogeado,
+    usuarioLogout
 }
 
 

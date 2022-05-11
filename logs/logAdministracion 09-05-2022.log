@@ -26,3 +26,5 @@
 [09-05-2022  12:04:23 PM] info Se ingreso un usuario
 [09-05-2022  13:02:31 PM] info Usuario autenticado: mvalenzuela
 [09-05-2022  13:04:54 PM] info Usuario autenticado: mvalenzuela
+[09-05-2022  15:50:58 PM] warn credenciales no coinciden: mvalenzuela
+[09-05-2022  15:51:06 PM] info Usuario autenticado: mvalenzuela
