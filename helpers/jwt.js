@@ -8,7 +8,7 @@ const generarJWT = (nombreUsuario,  idRol) => {
 
     return new Promise( (resolve, reject) => {
         jwt.sign( payload, process.env.JWT_SECRET, {
-            expiresIn: '8h',
+            expiresIn: '10h',
             
         }, (error, token) => {
             if( error ) {
@@ -27,7 +27,7 @@ const generarJWTAdmin = ( nombreUsuario, idRol ) => {
 
     return new Promise ( ( resolve, reject ) => {
         jwt.sign( payload, process.env.JWT_SECRET, {
-            expiresIn: '3h'
+            expiresIn: '4h'
         }, ( error, token ) => {
             if( error ) {
                 console.log( error );

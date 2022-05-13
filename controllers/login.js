@@ -4,78 +4,25 @@ const bcryptjs = require('bcryptjs');
 const { generarJWT, generarJWTAdmin } = require('../helpers/jwt');
 const { logLogin } = require('../helpers/logger')
 
-
-const ingresoUsuarioLogeado = (req, res = response ) => {
-    try {
-        const {email} = req.body        
-        if(!email){
-            res.json('Debe ingresar un email')
-        }else {
-        
-            pool.query('select email from estadologin where email = ? ', [email], async ( error, result ) => {
-               
-                if(result.length === 0){
-                    pool.query(' call SP_USUARIOLOGIN ( ? ); ', [email], (error, filas, campos) => {
-                        if(error){
-                            res.json('Ocurrio un problema');
-                        }else {
-                            res.json({
-                                msg: 'Usuario Conectado',
-                                usuario: filas[0],
-                                estado: false
-                            })
-                        }
-                    })
-                }else {
-                    res.json({
-                        msg: 'El usuario ya se encuentra conectado',
-                        estado: true
-                    })
-                }
-            })
-        }
-        
-    } catch (error) {
-        console.log(error)
-        res.status(404).json(' No se pudo hacer la operacion')
-    }
-}
+var estadolog = false;
 
 const usuarioLogout = (req, res = response ) => {
     try {
-        const {email} = req.params
-        console.log(email)
-        if(!email){
-            res.json('Debe ingresar un email')
-        }else {
-            pool.query('select email from estadologin where email = ? ', [email], async ( error, result ) => {
-                console.log(result.length)
-                if(result.length >=1){
-                    pool.query(' call SP_USUARIOLOGOUT ( ? ); ', [email], (error, filas, campos) => {
-                        if(error){
-                            res.json('Ocurrio un problema');
-                        }else {
-                            res.json({
-                                msg: 'Usuario Desconectado Correctamente',
-                                usuario: filas[0],
-                                estado: false
-                            })
-                        }
-                    })
-                }else {
-                    res.json({
-                        msg: 'El usuario no se encuentra conectado',
-                        estado: true
-                    })
-                }
-            })
+        const { logeado } = req.body
+
+        if(!logeado){
+            return res.status(403).json('El usuario no puede desconectarse')
+        }else{
+            estadolog = false;
         }
         
     } catch (error) {
+        logLogin.error(`Error al desconectarse ${usuario}`)
         console.log(error)
-        res.status(404).json(' No se pudo hacer la operacion')
+        
     }
 }
+
 
 /** Metodo que permite el logueo de un usuario */
 const loginUsuario = (req, res = response) => {
@@ -553,8 +500,6 @@ module.exports = {
     filtroIdUsuario,
     modificarPassword,
     desactivarUsuario,
-    // usuariologout,
-    ingresoUsuarioLogeado,
     usuarioLogout
 }
 
@@ -566,7 +511,9 @@ module.exports = {
 
 
 
-
+/** ESTE CODIGO FUNCIONA PERO ESAS FUNCIONES NO SON NECESARIAS DE MOMENTO
+ * mucho de este codigo puede servir en una futura implementacion
+ */
 
 // console.log(error);
 // res.status(401).json({
@@ -607,3 +554,76 @@ module.exports = {
 //         estado: result[0].estado
 //     });   
 // }
+
+
+
+ // try {
+    //     const {email} = req.params
+    //     console.log(email)
+    //     if(!email){
+    //         res.json('Debe ingresar un email')
+    //     }else {
+    //         pool.query('select email from estadologin where email = ? ', [email], async ( error, result ) => {
+    //             console.log(result.length)
+    //             if(result.length >=1){
+    //                 pool.query(' call SP_USUARIOLOGOUT ( ? ); ', [email], (error, filas, campos) => {
+    //                     if(error){
+    //                         res.json('Ocurrio un problema');
+    //                     }else {
+    //                         res.json({
+    //                             msg: 'Usuario Desconectado Correctamente',
+    //                             usuario: filas[0],
+    //                             estado: false
+    //                         })
+    //                     }
+    //                 })
+    //             }else {
+    //                 res.json({
+    //                     msg: 'El usuario no se encuentra conectado',
+    //                     estado: true
+    //                 })
+    //             }
+    //         })
+    //     }
+        
+    // } catch (error) {
+    //     console.log(error)
+    //     res.status(404).json(' No se pudo hacer la operacion')
+    // }
+
+    // const ingresoUsuarioLogeado = (req, res = response ) => {
+    //     try {
+    //         const {email} = req.body        
+    //         if(!email){
+    //             res.json('Debe ingresar un email')
+    //         }else {
+            
+    //             pool.query('select email from estadologin where email = ? ', [email], async ( error, result ) => {
+                   
+    //                 if(result.length === 0){
+    //                     pool.query(' call SP_USUARIOLOGIN ( ? ); ', [email], (error, filas, campos) => {
+    //                         if(error){
+    //                             res.json('Ocurrio un problema');
+    //                         }else {
+    //                             res.json({
+    //                                 msg: 'Usuario Conectado',
+    //                                 usuario: filas[0],
+    //                                 estado: false
+    //                             })
+    //                         }
+    //                     })
+    //                 }else {
+    //                     res.json({
+    //                         msg: 'El usuario ya se encuentra conectado',
+    //                         estado: true
+    //                     })
+    //                 }
+    //             })
+    //         }
+            
+    //     } catch (error) {
+    //         console.log(error)
+    //         res.status(404).json(' No se pudo hacer la operacion')
+    //     }
+    // }
+    

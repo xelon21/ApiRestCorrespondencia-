@@ -4,8 +4,7 @@ const { loginUsuario, registroUsuario,
     validaApiKey, filtroUsuario,
     traeRoles, traeUsuario, validaApiKeyAdmin,
     modificarUsuario, filtroIdUsuario,
-    modificarPassword, desactivarUsuario,
-    usuariologout,ingresoUsuarioLogeado,
+    modificarPassword, desactivarUsuario,    
     usuarioLogout
     } = require('../controllers/login');
 const { validarJWT, validarAdmin } = require('../middlewares/validar-jwt');
@@ -35,9 +34,7 @@ router.put('/login/modificarEstado/:idUsuario', desactivarUsuario)
 
 router.put('/login/modificar/:idUsuario', modificarUsuario)
 
-router.post('/login/coneccionUsuario', ingresoUsuarioLogeado);
-
-router.delete('/login/desconeccionUsuario/:email', usuarioLogout);
+router.post('/logout', usuarioLogout);
 
 
 
