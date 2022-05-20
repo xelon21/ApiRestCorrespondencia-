@@ -16,8 +16,6 @@ app.set('port', process.env.PORT || 3000)
 
 require('./socket.js')(io, app)
 
-
-
 server.on('connection', (socket) => {
   /** evento que recive los mensajes que se envian */
   socket.on('data', (data) => {
@@ -33,8 +31,6 @@ server.on('connection', (socket) => {
     console.log(error.message)
   })
 })
-
-
 
 require('dotenv').config();
 
@@ -65,12 +61,12 @@ app.get('*', ( req, res ) => {
     res.sendFile( path.resolve( __dirname, 'public/index.html' ))
 })
 
+app.listen( process.env.PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${process.env.PORT}`);
+});
+
+
 // inicio de servidor
 // app.listen(app.get('port'), () => {
 //   console.log(`Servidor corriendo en el puerto` + app.get('port'));
 // })
-
-
-app.listen( process.env.PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${process.env.PORT}`);
-}); 

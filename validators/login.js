@@ -43,6 +43,13 @@ const validateRegistro = [
         .isString()   
 ]
 
+module.exports = {
+    validateLogin,
+    validateRegistro,
+    
+}
+
+/** CODIGO RANDOM */
 // /** Validaciones de contraseñas para el metodo que permite cambiar la contraseña */
 // const validaPassword = [
 //     check('password')
@@ -54,9 +61,3 @@ const validateRegistro = [
 //         .isStrongPassword()
 //         .notEmpty()
 // ]
-
-module.exports = {
-    validateLogin,
-    validateRegistro,
-    
-}

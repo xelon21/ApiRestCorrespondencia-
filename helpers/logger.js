@@ -42,15 +42,11 @@ const logCorrespondencia = winston.createLogger({
         ]
 });
 
-
-
 const logLogin = winston.createLogger({
     transports: [
         fileRotateTransportAdmin
     ]
 }) 
-
-
 
 module.exports = {
     logLogin,

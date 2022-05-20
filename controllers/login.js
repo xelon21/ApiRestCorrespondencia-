@@ -23,7 +23,6 @@ const usuarioLogout = (req, res = response ) => {
     }
 }
 
-
 /** Metodo que permite el logueo de un usuario */
 const loginUsuario = (req, res = response) => {
 
@@ -162,7 +161,6 @@ const registroUsuario = async (req, res) => {
                 })
         }        
 }
-
 
 /** Metodo que permite validar el token de un usuario al ingresarse y volver a autenticarlo */
 const validaApiKey = async ( req, res ) => {    

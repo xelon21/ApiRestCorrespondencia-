@@ -10,8 +10,6 @@ const { mostrarCorrespondencia, muestraUltimo,
 
 const { validateCreate, validateUpdate } = require('../validators/correspondencia')
 
-
-
 router.get('/mostrar', mostrarCorrespondencia);
 
 router.get('/mostrar/ultimo', muestraUltimo);
@@ -29,10 +27,5 @@ router.get('/filtrar/:fechaInicio/:fechaTermino', filtroRangoFechas);
 router.post('/ingresar', validateCreate, ingresarCorrespondencia);
 
 router.put('/modificar/:correlativo', validateUpdate, modificarCorrespondencia);
-
-/**[
-    check('email', 'El email es obligatorio').isEmail().isEmpty(),
-    check('password', 'El password no es correcto').isStrongPassword()
-], */
 
 module.exports = router;

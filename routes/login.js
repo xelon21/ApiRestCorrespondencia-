@@ -8,8 +8,7 @@ const { loginUsuario, registroUsuario,
     usuarioLogout
     } = require('../controllers/login');
 const { validarJWT, validarAdmin } = require('../middlewares/validar-jwt');
-const { validateLogin, validateRegistro } = require('../validators/login') 
-
+const { validateLogin, validateRegistro } = require('../validators/login')
 
 
 router.post('/login', validateLogin,  loginUsuario);
@@ -35,7 +34,5 @@ router.put('/login/modificarEstado/:idUsuario', desactivarUsuario)
 router.put('/login/modificar/:idUsuario', modificarUsuario)
 
 router.post('/logout', usuarioLogout);
-
-
 
 module.exports = router;

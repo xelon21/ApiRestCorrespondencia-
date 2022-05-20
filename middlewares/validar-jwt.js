@@ -51,7 +51,6 @@ const validarAdmin = ( req, res = response, next ) => {
     next();
 }
 
-
 module.exports = {
     validarJWT,
     validarAdmin
