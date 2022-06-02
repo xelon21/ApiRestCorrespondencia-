@@ -8,18 +8,20 @@ const { logCorrespondencia } = require('../helpers/logger')
 /** Metodo que muestra todas las correspondencias. */
 const mostrarCorrespondencia = async ( req, res = response) => {
     await pool.query(`select d.nombreDocumento,
-                                  e.nombreEnvio,
-                                  usuario,
-                                  destinatario,
-                                  referencia,
-                                  fecha,
-                                  correlativo,
-                                  estadoCorreo
-                                  from correo c join tipodocumento d
-                                  on ( c.idTipoDocumento = d.idTipoDocumento)
-                                  join tipoenvio e
-                                  on ( c.idTipoEnvio = e.idTipoEnvio )`,
-                                 (error, filas, campos) => {
+                             e.nombreEnvio,
+                             u.nombreUsuario,
+                             destinatario,
+                             referencia,
+                             fecha,
+                             correlativo,
+                             estadoCorreo
+                             from correo c join tipoDocumento d
+                             on( d.idtipoDocumento = c.idTipoDocumento )
+                             join tipoEnvio e 
+                             on( e.idtipoEnvio = c.idTipoEnvio )
+                             join usuarios u 
+                             on( u.idUsuario = c.idUsuario );`,
+                        (error, filas, campos) => {
         if(!error) {
             res.status(200).json(filas);
         }else {
@@ -42,7 +44,7 @@ const muestraUltimo = async ( req, res ) => {
 
 /** Metodo que trae todos los tipos de envio */
 const muestraTipoEnvio = async ( req, res ) => {
-    await pool.query(`select * from tipoenvio`,
+    await pool.query(`select * from tipoEnvio`,
                                  (error, filas, campos) => {
         if(!error) {
             res.status(200).json(filas);
@@ -54,7 +56,7 @@ const muestraTipoEnvio = async ( req, res ) => {
 
 /** Metodo que trae todos los tipos de documento */
 const muestraTipoDocumento = async ( req, res ) => {
-    await pool.query(`select * from tipodocumento`,
+    await pool.query(`select * from tipoDocumento`,
                                  (error, filas, campos) => {
         if(!error) {
             res.status(200).json(filas);
@@ -93,34 +95,6 @@ const buscarCorrelativoModificar = async ( req, res ) => {
     }
 }
 
-/** Metodo que permite filtrar una correspondencia por correlativo
- *  Se utiliza en el filtro por correlativo y rango de fechas
- */
-const filtroCorrelativo = async ( req, res ) => {
-    const { correlativo } = req.params;
-
-    try {
-        const query = ` call SP_FILTROCORRELATIVO( ? );`
-        await pool.query(query, [ correlativo ],
-        ( error, filas, campos ) => {
-            if(!error) {
-                res.json(filas[0]);
-            } else {
-                res.json({
-                    msg: 'no hay nada'
-                })
-            }
-        });
-    } catch (error) {
-        console.log(error);
-        res.json({
-             Error: error,
-             msg: 'Correlativo no existe'
-        })
-    }
-   
-}
-
 /** Metodo que permite filtrar las correspondencias
  *  Dentro de un rango de fechas 
  */
@@ -144,16 +118,15 @@ const filtroRangoFechas = async ( req, res ) => {
 /** Metodo que permite ingresar una correspondencia */
 const ingresarCorrespondencia = async ( req, res ) => {    
 
-    const { idTipoDocumento, idTipoEnvio, usuario, destinatario, referencia  } = req.body;
-    const query = `        
-        CALL SP_INGRESACORRESPONDENCIA( ?, ?, ?, ?, ? );
-    `;
+    const { idTipoDocumento, idTipoEnvio, idUsuario, destinatario, referencia } = req.body;
+    const query = `CALL SP_INGRESACORRESPONDENCIA( ?, ?, ?, ?, ? );`; 
 
-    await pool.query(query, [idTipoDocumento, idTipoEnvio, usuario,
+    await pool.query(query, [ idTipoDocumento, idTipoEnvio, idUsuario,
         destinatario, referencia ],
-        ( error, filas, campos ) => {
+        ( error, filas, campos ) => {     
             if(!error) {
-                logCorrespondencia.info(`El usuario [${usuario}] agrego una correspondencia`)
+
+                logCorrespondencia.info(`El usuario [${idUsuario}] agrego una correspondencia`)
                 pool.query('select correlativo from correo where idCorrespondencia = (SELECT MAX(idCorrespondencia) as correlativo FROM correo);', (error, filas, campos) => {
                     res.status(200).json({                        
                         status: 'Se ha guardado la correspondencia',
@@ -168,13 +141,34 @@ const ingresarCorrespondencia = async ( req, res ) => {
         });
 }
 
+const filtroCorrelativo = async ( req, res ) => {
+    const { correlativo } = req.params;
+
+    try {
+        const query = `call SP_FILTROCORRELATIVO( ? );`
+        await pool.query(query, [ correlativo ], ( error, filas, campos ) => {       
+            if(!error){
+                res.json(filas[0]);                
+            }else {
+                res.json({
+                    msg: 'no hay nada'
+                })
+            }
+        }) 
+    } catch (error) {
+        res.json({
+            Error: error,
+            msg: 'Correlativo no existe'
+        })
+    }
+}
 /** Metodo que permite modificar una correspondencia donde el 
  *  Estado del correo sea GRABADO y El usuario sea el mismo que 
  *  Creo la correspondencia.
  */
 const modificarCorrespondencia = async ( req, res ) => {   
 
-    const { idTipoEnvio, usuario, destinatario, referencia, estadoCorreo } = req.body;
+    const { idTipoEnvio, idUsuario, destinatario, referencia, estadoCorreo } = req.body;
     const { correlativo } = req.params;  
     const query2 =  `
         select * from correo where correlativo = ?
@@ -188,8 +182,8 @@ const modificarCorrespondencia = async ( req, res ) => {
                 msg: 'la correspondencia ya se encuentra anulada'                
             });            
             return;            
-            }else {                
-                if(filas[0].usuario === usuario) {
+            }else {
+                if(filas[0].idUsuario === idUsuario) {
 
                     const query = `
                         CALL SP_MODIFICARCORRESPONDENCIA( ?, ?, ?, ?, ? );
@@ -205,11 +199,11 @@ const modificarCorrespondencia = async ( req, res ) => {
                             }
                         });
                 }else {
-                    logCorrespondencia.info(`ocurrio un error al modificar la correspondencia[el usuario no es el mismo [${usuario}]]`)
+                    logCorrespondencia.info(`ocurrio un error al modificar la correspondencia[el usuario no es el mismo [${idUsuario}]]`)
                     res.json({
                         status: 'No se puede modificar',
                         msg: 'Error al modificar la correspondencia',
-                        us: usuario                        
+                        us: idUsuario                        
                     });  
                 }
             }
@@ -221,18 +215,15 @@ const modificarCorrespondencia = async ( req, res ) => {
 }
 
 
-
-
-
 module.exports =  {
     mostrarCorrespondencia,
     muestraUltimo,
     muestraTipoEnvio,
     muestraTipoDocumento,
-    buscarCorrelativoModificar,
-    filtroCorrelativo,
+    buscarCorrelativoModificar,   
     filtroRangoFechas,
     ingresarCorrespondencia,
-    modificarCorrespondencia
+    modificarCorrespondencia,
+    filtroCorrelativo    
     
 }

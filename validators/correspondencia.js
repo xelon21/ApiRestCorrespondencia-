@@ -11,9 +11,9 @@ const validateCreate = [
         .exists()
         .isNumeric()
         .notEmpty(),
-    check('usuario')
+    check('idUsuario')
         .exists()
-        .isString()
+        .isNumeric()
         .notEmpty(),
     check('destinatario')
         .exists()

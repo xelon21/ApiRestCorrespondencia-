@@ -2,9 +2,9 @@ const jwt = require('jsonwebtoken');
 
 
 /** Metodo que genera un Json Web Token a partir del nombre de ususario y el id del rol */
-const generarJWT = (nombreUsuario,  idRol) => {
+const generarJWT = (nombreUsuario,  idRol, idUsuario) => {
 
-    const payload = { nombreUsuario,  idRol };
+    const payload = { nombreUsuario,  idRol, idUsuario };
 
     return new Promise( (resolve, reject) => {
         jwt.sign( payload, process.env.JWT_SECRET, {
@@ -22,8 +22,8 @@ const generarJWT = (nombreUsuario,  idRol) => {
 }
 
 /** Metodo que genera un Json Web Token a partir del nombre de ususario y el id del rol para administradores*/
-const generarJWTAdmin = ( nombreUsuario, idRol ) => {
-    const payload = { nombreUsuario, idRol };
+const generarJWTAdmin = ( nombreUsuario, idRol, idUsuario ) => {
+    const payload = { nombreUsuario, idRol, idUsuario };
 
     return new Promise ( ( resolve, reject ) => {
         jwt.sign( payload, process.env.JWT_SECRET, {

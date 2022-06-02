@@ -4,7 +4,6 @@ const bcryptjs = require('bcryptjs');
 const { generarJWT, generarJWTAdmin } = require('../helpers/jwt');
 const { logLogin } = require('../helpers/logger')
 
-var estadolog = false;
 
 const usuarioLogout = (req, res = response ) => {
     try {
@@ -45,19 +44,19 @@ const loginUsuario = (req, res = response) => {
                             // se corrobora que la password coincida con la que se encuentra en la base de datos                               
                             if(!result.length === 0 || (await bcryptjs.compare(password, result[0].password))){                                                
                               // se genera el json web token 
-                              const token = await generarJWT( result[0].nombreUsuario, result[0].idRol );
+                              const token = await generarJWT( result[0].nombreUsuario, result[0].idRol, result[0].idUsuario );
                               logLogin.info(`Usuario autenticado: ${result[0].nombreUsuario}`)
                               // se envia mensaje de respuesta 
                               res.json({
                                   estadoMsg: true,
                                   msg: 'Se ha conectado con exito',
                                   apiKey: token,
-                                  uid: result[0].idUsuario,
+                                  idUsuario: result[0].idUsuario,
                                   email: result[0].correoUsuario,
                                   idRol: result[0].idRol,                        
                                   nombre: result[0].nombreUsuario,                        
                                   estado: result[0].estado,                            
-                              });  
+                              });                            
                               
                             }else{
                             logLogin.warn(`credenciales no coinciden: ${result[0].nombreUsuario}`)                 
@@ -166,20 +165,21 @@ const registroUsuario = async (req, res) => {
 const validaApiKey = async ( req, res ) => {    
 
     // se extraen los párametros de la request
-    const { nombreUsuario, idRol} = req; 
-    try {
-
+    const { nombreUsuario, idRol, idUsuario} = req; 
+    try {      
         // se declara una constante que almacenara la generacion del token 
         // y se llama al metodo que genera el mismo para posteriormente devolver
         // una respuesta segun el resultado arrojado
-        const apiKey = await generarJWT( nombreUsuario, idRol ) ;    
+        const apiKey = await generarJWT( nombreUsuario, idRol, idUsuario ) ;            
         return res.status(200).json({
             estadoMsg: true,
             msg: 'Key Valida',        
             nombre: nombreUsuario,
             idRol: idRol,
-            apiKey: apiKey
+            apiKey: apiKey,     
+            idUsuario: idUsuario       
         })  
+        
         
     } catch (error) {
         console.log(error);
@@ -194,15 +194,16 @@ const validaApiKey = async ( req, res ) => {
 const validaApiKeyAdmin = async ( req, res ) => { 
 
     try {
-        const { nombreUsuario, idRol } = req;       
+        const { nombreUsuario, idRol, idUsuario } = req;           
                 if( idRol === 1 ){
-                    const apiKey = await generarJWTAdmin( nombreUsuario, idRol );                
+                    const apiKey = await generarJWTAdmin( nombreUsuario, idRol, idUsuario );                
                     return res.status(200).json({
                         estadoMsg: true,
                         msg: 'Key Valida',        
                         nombre: nombreUsuario,
                         idRol: idRol,
-                        apiKey: apiKey
+                        apiKey: apiKey,
+                        idUsuario: idUsuario
                     }) 
                 }                
                 

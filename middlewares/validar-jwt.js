@@ -10,9 +10,10 @@ const validarJWT = ( req, res = response, next ) => {
         })
     }
     try {
-        const {nombreUsuario, idRol} = jwt.verify( apiKey, process.env.JWT_SECRET );        
+        const {nombreUsuario, idRol, idUsuario} = jwt.verify( apiKey, process.env.JWT_SECRET );        
         req.nombreUsuario = nombreUsuario;
         req.idRol = idRol;
+        req.idUsuario = idUsuario
     } catch (error) {
         return res.status(401).json({
             Error: 'Key no valida'
@@ -31,9 +32,10 @@ const validarAdmin = ( req, res = response, next ) => {
         })
     }    
     try {
-        const { nombreUsuario, idRol } = jwt.verify( apiKey, process.env.JWT_SECRET );       
+        const { nombreUsuario, idRol, idUsuario } = jwt.verify( apiKey, process.env.JWT_SECRET );       
         req.nombreUsuario = nombreUsuario;
         req.idRol = idRol;     
+        req.idUsuario = idUsuario;
         // console.log(idRol, nombreUsuario)   
         // if(req.idRol === 1 ) {
         //     console.log('entro xD')

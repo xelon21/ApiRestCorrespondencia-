@@ -3,9 +3,10 @@ const { Router } = require('express');
 const router = Router();
 const { mostrarCorrespondencia, muestraUltimo,
         muestraTipoEnvio, muestraTipoDocumento,
-        filtroCorrelativo, buscarCorrelativoModificar,
+        buscarCorrelativoModificar,
         filtroRangoFechas, ingresarCorrespondencia,
-        modificarCorrespondencia 
+        modificarCorrespondencia,
+        filtroCorrelativo 
 } = require('../controllers/correspondencia');
 
 const { validateCreate, validateUpdate } = require('../validators/correspondencia')
