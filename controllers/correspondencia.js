@@ -1,229 +1,218 @@
-const { response } = require('express');
-const pool = require('../database/database');
+//se importa la coneccion y sql de la carpeta dataqbase
+import { getConnection, sql } from "../database/databaseSqlServer"
+//se importa el metodo que permite generar un log de reportes dentro del direcctorio de logs
 const { logCorrespondencia } = require('../helpers/logger')
 
-
-
-
-/** Metodo que muestra todas las correspondencias. */
-const mostrarCorrespondencia = async ( req, res = response) => {
-    await pool.query(`select d.nombreDocumento,
-                             e.nombreEnvio,
-                             u.nombreUsuario,
-                             destinatario,
-                             referencia,
-                             fecha,
-                             correlativo,
-                             estadoCorreo
-                             from correo c join tipoDocumento d
-                             on( d.idtipoDocumento = c.idTipoDocumento )
-                             join tipoEnvio e 
-                             on( e.idtipoEnvio = c.idTipoEnvio )
-                             join usuarios u 
-                             on( u.idUsuario = c.idUsuario );`,
-                        (error, filas, campos) => {
-        if(!error) {
-            res.status(200).json(filas);
-        }else {
-            console.log(error);
-        }
-    });
-}
-
-/** Metodo que permite mostrar el ultimo correo ingresado */
-const muestraUltimo = async ( req, res ) => {
-    await pool.query(`select correlativo from correo where idCorrespondencia = (SELECT MAX(idCorrespondencia) as correlativo FROM correo);`,
-                                 (error, filas, campos) => {
-        if(!error) {
-            res.status(200).json(filas[0]);
-        }else {
-            console.log(error);
-        }
-    });
-}
-
-/** Metodo que trae todos los tipos de envio */
-const muestraTipoEnvio = async ( req, res ) => {
-    await pool.query(`select * from tipoEnvio`,
-                                 (error, filas, campos) => {
-        if(!error) {
-            res.status(200).json(filas);
-        }else {
-            console.log(error);
-        }
-    });
-}
-
-/** Metodo que trae todos los tipos de documento */
-const muestraTipoDocumento = async ( req, res ) => {
-    await pool.query(`select * from tipoDocumento`,
-                                 (error, filas, campos) => {
-        if(!error) {
-            res.status(200).json(filas);
-        }else {
-            console.log(error);
-        }
-    });
-}
-
-/** Metodo que busca una correspondencia por correlativo
- *  Se utiliza para modificar una correspondencia en especifico
- */
-const buscarCorrelativoModificar = async ( req, res ) => {
-    const { correlativo } = req.params;
-    try {
-        const query = ` select * from correo where correlativo = ? `
-        await pool.query( query, [ correlativo ],
-            (error, filas, campos ) => {
-                if(!error) {
-                    logCorrespondencia.info(`Se encontro una correspondencia`)
-                    res.json(filas[0]);
-                } else {
-                    logCorrespondencia.info(`No se encontraron correspondencias asociadas al correlativo: [${correlativo}]`)
-                    res.json({
-                        msg: 'no hay nada'
-                    })
-                }
-            });
-    } catch (error) {
-        logCorrespondencia.info(`No existe el correlativo buscado: [${correlativo}]`)
-        console.log(error);
-        res.json({
-             Error: error,
-             msg: 'Correlativo no existe'
-        })
-    }
-}
-
-/** Metodo que permite filtrar las correspondencias
- *  Dentro de un rango de fechas 
- */
-const filtroRangoFechas = async ( req, res ) => {
-    const { fechaInicio, fechaTermino  } = req.params; 
-    const query = ` CALL SP_FILTROFECHAS( ?, ? ); `;
-        await pool.query(query, [ fechaInicio, fechaTermino ],
-        ( error, filas, campos ) => {
-            if(!error) {
-                res.json(filas[0]); 
-            }else {
-                console.log(error);
-                res.json({
-                    Error: error,
-                    msg: 'No se encuentran correspondencias'
-                })
-            }
-        }); 
-}
-
-/** Metodo que permite ingresar una correspondencia */
-const ingresarCorrespondencia = async ( req, res ) => {    
-
-    const { idTipoDocumento, idTipoEnvio, idUsuario, destinatario, referencia } = req.body;
-    const query = `CALL SP_INGRESACORRESPONDENCIA( ?, ?, ?, ?, ? );`; 
-
-    await pool.query(query, [ idTipoDocumento, idTipoEnvio, idUsuario,
-        destinatario, referencia ],
-        ( error, filas, campos ) => {     
-            if(!error) {
-
-                logCorrespondencia.info(`El usuario [${idUsuario}] agrego una correspondencia`)
-                pool.query('select correlativo from correo where idCorrespondencia = (SELECT MAX(idCorrespondencia) as correlativo FROM correo);', (error, filas, campos) => {
-                    res.status(200).json({                        
-                        status: 'Se ha guardado la correspondencia',
-                        correlativo: filas[0].correlativo
-                    });                    
-                })               
-
-            } else {
-                logCorrespondencia.info(`no se puede ingresar la correspondencia`)
-                console.log(error);
-            }
-        });
-}
-
-const filtroCorrelativo = async ( req, res ) => {
-    const { correlativo } = req.params;
+//Metodo que permite obtener todas las correspondencias mediante el metodo get
+export const mostrarCorrespondencia = async (req, resp) => {
 
     try {
-        const query = `call SP_FILTROCORRELATIVO( ? );`
-        await pool.query(query, [ correlativo ], ( error, filas, campos ) => {       
-            if(!error){
-                res.json(filas[0]);                
-            }else {
-                res.json({
-                    msg: 'no hay nada'
-                })
-            }
-        }) 
+        
+        const pool = await getConnection()
+        const result = await pool.request()
+        .query(`select d.nombreDocumento,
+                       e.nombreEnvio,
+                       u.nombreUsuario,
+                       destinatario,
+                       referencia,
+                       fecha,
+                       correlativo,
+                       estadoCorreo
+                       from correo c join tipoDocumento d
+                       on( d.idtipoDocumento = c.idTipoDocumento )
+                       join tipoEnvio e 
+                       on( e.idtipoEnvio = c.idTipoEnvio )
+                       join usuarios u 
+                       on( u.idUsuario = c.idUsuario )`)
+     
+        resp.status(200).json(result.recordset)
+
     } catch (error) {
-        res.json({
-            Error: error,
-            msg: 'Correlativo no existe'
-        })
+        
+        resp.status(400).json('Error al tratar de obtener los datos: ' + error)
     }
-}
-/** Metodo que permite modificar una correspondencia donde el 
- *  Estado del correo sea GRABADO y El usuario sea el mismo que 
- *  Creo la correspondencia.
- */
-const modificarCorrespondencia = async ( req, res ) => {   
+} 
 
-    const { idTipoEnvio, idUsuario, destinatario, referencia, estadoCorreo } = req.body;
-    const { correlativo } = req.params;  
-    const query2 =  `
-        select * from correo where correlativo = ?
-    ` ;    
-    await pool.query(query2, [correlativo], (error, filas, campos) => {       
-        if(!error){            
-            if( filas[0].estadoCorreo === 'ANULADO' ) {
-                logCorrespondencia.info(`El usuario intento anular una correspondencia ` )
-            res.json({
-                status: 'No se puede modificar',
-                msg: 'la correspondencia ya se encuentra anulada'                
-            });            
-            return;            
-            }else {
-                if(filas[0].idUsuario === idUsuario) {
+//metodo que permite ingresar una correspondencia llamando a al procedimiento almacenado SP_INGRESACORRESPONDENCIA
+export const ingresarCorrespondencia = async (req, resp) => {
 
-                    const query = `
-                        CALL SP_MODIFICARCORRESPONDENCIA( ?, ?, ?, ?, ? );
-                    `;
-                    pool.query(query, [ idTipoEnvio, destinatario, referencia, correlativo, estadoCorreo ],
-                        ( error, filas, campos ) => {
-                            if(!error) {
-                                logCorrespondencia.info(`Se actualizo la correspondencia`)
-                                res.json({Status: 'Se a actualizado la correspondencia'});
-                            } else {
-                                logCorrespondencia.info(`ocurrio un error al modificar la correspondencia[en la query]`)
-                                console.log(error);
-                            }
-                        });
-                }else {
-                    logCorrespondencia.info(`ocurrio un error al modificar la correspondencia[el usuario no es el mismo [${idUsuario}]]`)
-                    res.json({
-                        status: 'No se puede modificar',
-                        msg: 'Error al modificar la correspondencia',
-                        us: idUsuario                        
-                    });  
-                }
-            }
-        }else {
-            logCorrespondencia.info(`ocurrio un error al modificar la correspondencia[error al llamar el metodo]`)
-            console.log(error)
-        }       
-    })     
-}
+    //se extraen los datos del body para su posterior insercion
+    const { idTipoDocumento, idTipoEnvio, idUsuario, destinatario, referencia } = req.body
+     
+    try {        
 
+        const pool = await getConnection();
+       
+        await pool.request()
+        .input('idTipoDocumento', sql.Int, idTipoDocumento)
+        .input('idTipoEnvio', sql.Int, idTipoEnvio )
+        .input('idUsuario', sql.Int, idUsuario)
+        .input('destinatario', sql.VarChar, destinatario)
+        .input('referencia', sql.VarChar, referencia)       
+        .execute('SP_INGRESACORRESPONDENCIA')
+        
+        resp.status(200).json('Se ha agregado 1 correspondencia')    
 
-module.exports =  {
-    mostrarCorrespondencia,
-    muestraUltimo,
-    muestraTipoEnvio,
-    muestraTipoDocumento,
-    buscarCorrelativoModificar,   
-    filtroRangoFechas,
-    ingresarCorrespondencia,
-    modificarCorrespondencia,
-    filtroCorrelativo    
+    }catch(error){
+        resp.status(400).json('ocurrio un error: ' + error +'')
+    } 
     
+}
+
+//Metodo que permite editar una correspondencia siempre y cuando esta no este anulada.
+export const modificarCorrespondencia = async (req, resp) => {
+    let validador = false;
+    try {
+        const { idTipoEnvio,destinatario, referencia, estadoCorreo } = req.body;
+        const { correlativo } = req.params;
+        const pool = await getConnection()
+        const result = await pool.request()
+        .input('correlativo', sql.VarChar, correlativo)
+        .query('select * from correo where correlativo = @correlativo')
+        if(result.rowsAffected == 0){
+            resp.json('No se encontro ninguna correspondencia asociada')
+        }else{
+            result.recordset.forEach(element => {
+                   if(element.estadoCorreo == 'ANULADO'){
+                     validador = false;
+                     resp.status(400).json('Esta correspondencia ya esta anulada')
+                   }else{
+                    validador = true;               
+                }
+                });
+        }
+        if(validador){
+            await pool.request()
+            .input('idTipoEnvio', sql.Int, idTipoEnvio )       
+            .input('destinatario', sql.VarChar, destinatario )
+            .input('referencia', sql.VarChar, referencia )
+            .input('estadoCorreo', sql.VarChar, estadoCorreo )
+            .input('correlativo', sql.VarChar, correlativo )
+            .execute('SP_MODIFICARCORRESPONDENCIA')
+
+            resp.status(200).json('Se ha modificado la correspondencia') 
+        }
+    } catch (error) {
+
+        resp.status(400).json('ocurrio un error: ' + error + '');
+        
+    }
+
+}
+
+export const muestraUltimo = async ( req, resp ) => {
+    try {
+        
+        const pool = await getConnection()
+        const result = await pool.request()
+        .query(`select correlativo from correo where idCorrespondencia = (SELECT MAX(idCorrespondencia) as correlativo FROM correo);`)
+     
+        resp.status(200).json(result.recordset)
+
+    } catch (error) {
+        
+        resp.status(400).json('Error al tratar de obtener los datos: ' + error)
+    }
+        
+}
+
+export const muestraTipoEnvio = async ( req, resp ) => {
+    try {        
+        const pool = await getConnection()
+        const result = await pool.request()
+        .query(`select * from tipoEnvio`)
+     
+        resp.status(200).json(result.recordset)
+
+    } catch (error) {
+        
+        resp.status(400).json('Error al tratar de obtener los datos: ' + error)
+    }
+}
+
+export const muestraTipoDocumento = async ( req, resp ) => {
+    try {        
+        const pool = await getConnection()
+        const result = await pool.request()
+        .query(`select * from tipoDocumento`)
+     
+        resp.status(200).json(result.recordset)
+
+    } catch (error) {
+        
+        resp.status(400).json('Error al tratar de obtener los datos: ' + error)
+    }
+}
+
+export  const buscarCorrelativoModificar = async ( req, resp ) => {
+
+        const { correlativo } = req.params;
+        try {
+            const pool = await getConnection()
+            const result = await pool.request()
+            .input('correlativo', sql.VarChar, correlativo)
+            .query('select * from correo where correlativo = @correlativo')
+            
+            if(result.rowsAffected == 0){
+                resp.status(400).json('No se encontro correspondencia asociada')
+            }else {
+                resp.status(200).json(result.recordset[0])
+            }
+         
+        } catch (error) {
+            logCorrespondencia.info(`No existe el correlativo buscado: [${correlativo}]`)
+           resp.json({
+                 Error: error,
+                 msg: 'Correlativo no existe'
+            })
+        }
+}
+
+export const filtroRangoFechas = async ( req, resp ) => {
+
+        const { fechaInicio, fechaTermino  } = req.params;
+        try {
+            const pool = await getConnection()
+            const result = await pool.request()
+            .input('fechaInicio', sql.VarChar, fechaInicio)
+            .input('fechaTermino', sql.VarChar, fechaTermino)
+            .execute('SP_FILTROFECHAS')
+            
+            if(result.rowsAffected == 0){
+                resp.status(400).json('No se encontraron correspondencias en este rango de fechas')
+            }else {
+                resp.status(200).json(result.recordset)
+            }
+         
+        } catch (error) {
+            console.log(error);
+            resp.json({
+                 Error: error,
+                 msg: 'No existen correspondencias dentro del rango de fecha ingresado'
+            })
+        }      
+}
+
+export const filtroCorrelativo = async ( req, resp ) => {
+    const { correlativo } = req.params;
+    
+    try {
+        const pool = await getConnection()
+        const result = await pool.request()
+        .input('filtro', sql.VarChar, correlativo)       
+        .execute('SP_FILTROCORRELATIVO')
+        
+        if(result.rowsAffected == 0){
+            resp.status(400).json('No se encontraron correspondencias')
+        }else {
+            resp.status(200).json(result.recordset)
+        }
+     
+    } catch (error) {
+        console.log(error);
+        resp.json({
+             Error: error,
+             msg: 'No existen correspondencias con ese correlativo'
+        })
+    }      
 }

@@ -1,0 +1,19 @@
+@api = http://localhost:4000/
+
+GET {{api}}mostrar
+
+###
+
+POST {{api}}correspo2
+
+Content-Type: application/json
+{
+    "idTipoDocumento": 2,
+    "idTipoEnvio": 2,
+    "idUsuario": 2,
+    "destinatario": "probando api con sql server",
+    "referencia": "sql server",
+    "fecha": "2022-08-08",
+    "correlativo": "CUO-0011-2022",
+    "estadoCorreo": "REQUEST",
+}

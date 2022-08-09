@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 
 const validarJWT = ( req, res = response, next ) => {
 
-    const apiKey =  req.header('x-api-key');  
+    const apiKey =  req.header('x-api-key');     
     if( !apiKey ) {
         return res.status(401).json({
             Error: 'No tiene autorizacion'

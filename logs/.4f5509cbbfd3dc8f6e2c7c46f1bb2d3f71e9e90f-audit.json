@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "D:\\Angular\\Angular\\RestApiCorrespondenciaV4_Puerto80\\logs\\.4f5509cbbfd3dc8f6e2c7c46f1bb2d3f71e9e90f-audit.json",
+    "files": [
+        {
+            "date": 1659985050099,
+            "name": "D:\\Angular\\Angular\\RestApiCorrespondenciaV4_Puerto80\\logs\\logAdministracion 08-08-2022.log",
+            "hash": "83ea8a756edcae033d57c65dfc63c336"
+        },
+        {
+            "date": 1660060176125,
+            "name": "D:\\Angular\\Angular\\RestApiCorrespondenciaV4_Puerto80\\logs\\logAdministracion 09-08-2022.log",
+            "hash": "6bacf2e1df5a823e9f3a20b612dc6fcfa675de6fb9b360680b852ce58d62ad5a"
+        }
+    ],
+    "hashType": "sha256"
+}

@@ -1,17 +1,18 @@
-// Se importan los componentes a utilizar
-const { Router } = require('express');
+import { Router } from 'express'
+import { ingresarCorrespondencia, mostrarCorrespondencia,
+         modificarCorrespondencia, muestraUltimo,
+         muestraTipoEnvio, muestraTipoDocumento,
+         buscarCorrelativoModificar, filtroRangoFechas,
+         filtroCorrelativo } from '../controllers/correspondencia'
+
+const { validateCreate } = require('../validators/correspondencia')
 const router = Router();
-const { mostrarCorrespondencia, muestraUltimo,
-        muestraTipoEnvio, muestraTipoDocumento,
-        buscarCorrelativoModificar,
-        filtroRangoFechas, ingresarCorrespondencia,
-        modificarCorrespondencia,
-        filtroCorrelativo 
-} = require('../controllers/correspondencia');
 
-const { validateCreate, validateUpdate } = require('../validators/correspondencia')
+router.get("/mostrar", mostrarCorrespondencia);
 
-router.get('/mostrar', mostrarCorrespondencia);
+router.post("/ingresar", validateCreate, ingresarCorrespondencia);
+
+router.put('/modificar/:correlativo', modificarCorrespondencia );
 
 router.get('/mostrar/ultimo', muestraUltimo);
 
@@ -21,12 +22,8 @@ router.get('/mostrar/tipodocumento', muestraTipoDocumento);
 
 router.get('/filtro/:correlativo', buscarCorrelativoModificar);
 
-router.get('/:correlativo', filtroCorrelativo);
-
 router.get('/filtrar/:fechaInicio/:fechaTermino', filtroRangoFechas);
 
-router.post('/ingresar', validateCreate, ingresarCorrespondencia);
+router.get('/:correlativo', filtroCorrelativo);
 
-router.put('/modificar/:correlativo', validateUpdate, modificarCorrespondencia);
-
-module.exports = router;
+export default router

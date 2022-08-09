@@ -16,48 +16,48 @@ const validateLogin = [
     }
 ]
 
-/** Validaciones del registro de un usuario */
-const validateRegistro = [
-    check('idRol')
-        .exists()
-        .isNumeric()
-        .notEmpty(),
-    check('email')
-        .exists()
-        .isEmail()
-        .notEmpty(),
-    check('password')
-        .exists()
-        .isStrongPassword()
-        .notEmpty(),
-    check('nombreUsuario')
-        .exists()
-        .isString()        
-        .notEmpty(),
-    check('estado')
-        .exists()
-        .isBoolean(),       
-    check('activacionUsuario')
-        .isString(),
-    check('desactivacionUsuario')
-        .isString()   
-]
-
-module.exports = {
-    validateLogin,
-    validateRegistro,
-    
-}
-
-/** CODIGO RANDOM */
-// /** Validaciones de contraseñas para el metodo que permite cambiar la contraseña */
-// const validaPassword = [
+// /** Validaciones del registro de un usuario */
+// const validateRegistro = [
+//     check('idRol')
+//         .exists()
+//         .isNumeric()
+//         .notEmpty(),
+//     check('email')
+//         .exists()
+//         .isEmail()
+//         .notEmpty(),
 //     check('password')
 //         .exists()
 //         .isStrongPassword()
 //         .notEmpty(),
-//     check('password2')
+//     check('nombreUsuario')
 //         .exists()
-//         .isStrongPassword()
-//         .notEmpty()
+//         .isString()        
+//         .notEmpty(),
+//     check('estado')
+//         .exists()
+//         .isBoolean(),       
+//     check('activacionUsuario')
+//         .isString(),
+//     check('desactivacionUsuario')
+//         .isString()   
 // ]
+
+// module.exports = {
+//     validateLogin,
+//     validateRegistro,
+    
+// }
+
+// /** CODIGO RANDOM */
+// // /** Validaciones de contraseñas para el metodo que permite cambiar la contraseña */
+// // const validaPassword = [
+// //     check('password')
+// //         .exists()
+// //         .isStrongPassword()
+// //         .notEmpty(),
+// //     check('password2')
+// //         .exists()
+// //         .isStrongPassword()
+// //         .notEmpty()
+// // ]
