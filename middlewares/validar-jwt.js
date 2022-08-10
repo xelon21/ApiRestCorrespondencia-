@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken');
 
 const validarJWT = ( req, res = response, next ) => {
 
+    console.log(req.header('x-api-key'), 'xapikey')
+    console.log(req.header('apikey'), 'apikey')
+
     const apiKey =  req.header('x-api-key');     
     if( !apiKey ) {
         return res.status(401).json({

@@ -28,14 +28,14 @@ export const loginUsuario = async (req, resp) => {
                         // se corrobora que la password coincida con la que se encuentra en la base de datos                               
                         if(!result.recordset.rowsAffected == 0 || (await bcryptjs.compare(password, result.recordset[0].password))){                                                
                                   // se genera el json web token 
-                                  const token = await generarJWT( result.recordset[0].nombreUsuario, result.recordset[0].idRol, result.recordset[0].idUsuario );
+                                const token = await generarJWT( result.recordset[0].nombreUsuario, result.recordset[0].idRol, result.recordset[0].idUsuario );
                                    // logLogin.info(`Usuario autenticado: ${result[0].nombreUsuario}`)
                                   // se envia mensaje de respuesta 
-                                 resp.status(200).json({
+                                resp.status(200).json({
                                     usuario: result.recordset[0].nombreUsuario,
                                     idRol: result.recordset[0].idRol,
                                     estado: result.recordset[0].estado,
-                                    token: token
+                                    apiKey: token
                                 })
                         }else{
                             resp.status(400).json('Las credenciales no coinciden')
@@ -111,17 +111,19 @@ export const validaApiKey = async ( req, res ) => {
 
         // se extraen los párametros de la request
         const { nombreUsuario, idRol, idUsuario} = req; 
+        console.log(req)
+        console.log(nombreUsuario, idRol, idUsuario)
         try {      
             // se declara una constante que almacenara la generacion del token 
             // y se llama al metodo que genera el mismo para posteriormente devolver
             // una respuesta segun el resultado arrojado
-            const apiKey = await generarJWT( nombreUsuario, idRol, idUsuario ) ;            
+            const token = await generarJWT( nombreUsuario, idRol, idUsuario ) ;            
             return res.status(200).json({
                 estadoMsg: true,
                 msg: 'Key Valida',        
                 nombre: nombreUsuario,
                 idRol: idRol,
-                apiKey: apiKey,     
+                apiKey: token,     
                 idUsuario: idUsuario       
             })  
         } catch (error) {
@@ -239,25 +241,23 @@ export const desactivarUsuario = async ( req, res ) => {
         if(estado == 1 ){
             const fecha = new Date();
             let activo = false;
-            
             const result = await pool.request()
             .input('idUsuario', sql.VarChar, idUsuario)
             .query('select * from usuarios where idUsuario = @idUsuario')
 
-            if(result.recordset.rowsAffected == 0){
+            if(result.recordset.rowsAffected == 0){               
                 res.status(400).json('no se encontraron usuarios')
-            }else{
+            }else{          
                 await pool.request()
                 .input('idUsuario', sql.Int, idUsuario )
                 .input('estado', sql.TinyInt, activo )
-                .input('desactivacionUsuario', sql.VarChar, fecha )
+                .input('desactivacionUsuario', sql.Date, fecha )
                 .execute('SP_MODIFICARESTADO')
-
+  
                 res.status(200).json('Se a modificado el estado del usuario')
             }
         }else{
             let activo = true;
-
             const result = await pool.request()
             .input('idUsuario', sql.VarChar, idUsuario)
             .query('select * from usuarios where idUsuario = @idUsuario')
@@ -285,44 +285,88 @@ export const desactivarUsuario = async ( req, res ) => {
     }
 }
 
+export const modificarPassword = async ( req, res ) => {   
+
+       /** Se obtienen las contraseñas del body */
+       const { password, password2 } = req.body 
+       /** Se obtiene el id del usuario */
+       const { idUsuario } = req.params;  
+       /** Se ejecuta la query para traer todos los datos 
+        *  Del id del usuario ingresado*/      
+       const pool = await getConnection()
+       try { 
+            const result = await pool.request()
+            .input('idUsuario', sql.VarChar, idUsuario)
+            .query('select * from usuarios where idUsuario = @idUsuario')
+           /** Se verifican 2 contraseñas si alguna no coincide, se envia mensaje de error */      
+           if(password != password2){
+               res.json({                
+                   msg: 'Las contraseñas no coinciden',                                      
+               });
+           }else {
+               /** Si pasa la validacion anterior, quiere decir que la primera password es la misma que la de confirmacion,
+                * por lo que se le hace un hash a la password 1 para posteriormente ingresarla en la base de datos.
+                */
+               let hashPass = await bcryptjs.hash(password, 8)
+               if(result.recordset.rowsAffected == 0){
+                    res.status(400).json('no se encontraron usuarios')
+               }else {
+                    await pool.request()
+                        .input('idUsuario', sql.Int, idUsuario)
+                        .input('password', sql.VarChar, hashPass)
+                        .execute('SP_MODIFICARPASSWORD')
+                        
+                        res.status(200).json(' Se ha modificado la contraseña ')
+               }         
+            }
+       } catch (error) {
+           //logLogin.error(`No Se pudo modificar la contraseña`)
+           console.log(error)
+           res.json({             
+               msg: 'No se puede modificar la contraseña', 
+               error: error                                     
+           });  
+       }  
+}
+
 
 //Metodo que permite editar una correspondencia siempre y cuando esta no este anulada.
-export const modificarCorrespondencia = async (req, resp) => {
-    let validador = false;
+export const modificarUsuario = async ( req, res ) => {   
+    /** Se obtiene el idRol, CorreoUsuario y nombreusuario del body */
+    const { idRol, correoUsuario, nombreUsuario } = req.body 
+    /** Se obtiene el id del usuario desde los params */
+    const { idUsuario } = req.params;  
+    /** Se ejecuta la query que permite traer todos los datos 
+     * del usuario asociado al id entregado*/
+    const pool = await getConnection()
+
     try {
-        const { idTipoEnvio,destinatario, referencia, estadoCorreo } = req.body;
-        const { correlativo } = req.params;
-        const pool = await getConnection()
         const result = await pool.request()
-        .input('correlativo', sql.VarChar, correlativo)
-        .query('select * from correo where correlativo = @correlativo')
-        if(result.rowsAffected == 0){
-            resp.json('No se encontro ninguna correspondencia asociada')
-        }else{
-            result.recordset.forEach(element => {
-                   if(element.estadoCorreo == 'ANULADO'){
-                     validador = false;
-                     resp.status(400).json('Esta correspondencia ya esta anulada')
-                   }else{
-                    validador = true;               
-                }
-                });
-        }
-        if(validador){
-            await pool.request()
-            .input('idTipoEnvio', sql.Int, idTipoEnvio )       
-            .input('destinatario', sql.VarChar, destinatario )
-            .input('referencia', sql.VarChar, referencia )
-            .input('estadoCorreo', sql.VarChar, estadoCorreo )
-            .input('correlativo', sql.VarChar, correlativo )
-            .execute('SP_MODIFICARCORRESPONDENCIA')
-
-            resp.status(200).json('Se ha modificado la correspondencia') 
-        }
-    } catch (error) {
-
-        resp.status(400).json('ocurrio un error: ' + error + '');
+            .input('idUsuario', sql.VarChar, idUsuario)
+            .query('select * from usuarios where idUsuario = @idUsuario')
         
+        if(result.recordset.rowsAffected == 0){
+            res.status(400).json('No se encontraron registros')
+        }else{
+
+            await pool.request()
+            .input('idUsuario', sql.Int, idUsuario)
+            .input('idRol', sql.Int, idRol)
+            .input('correoUsuario', sql.VarChar, correoUsuario)
+            .input('nombreUsuario', sql.VarChar, nombreUsuario)
+            .execute('SP_MODIFICARUSUARIO')
+
+            res.status(200).json('Se ha modificado el usuario')
+        }
+        
+    } catch (error) {
+        
+        //logLogin.error(`No Se pudo modificar la contraseña`)
+        console.log(error)
+        res.json({
+            msg: 'No se puede modificar el usuario',  
+            error: error                                    
+        });  
     }
 
 }

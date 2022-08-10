@@ -2,7 +2,8 @@ import { Router } from 'express'
 import { loginUsuario, registroUsuario,
          validaApiKey, validaApiKeyAdmin,
          filtroIdUsuario, traeRoles,
-         traeUsuario, desactivarUsuario } from '../controllers/login'
+         traeUsuario, desactivarUsuario,
+         modificarPassword, modificarUsuario } from '../controllers/login'
 import { validarJWT, validarAdmin } from '../middlewares/validar-jwt'
 
 const { validateLogin } = require('../validators/login')
@@ -23,5 +24,9 @@ router.get('/login/traeRoles', traeRoles);
 router.get('/login/traeUsuarios', traeUsuario);
 
 router.put('/login/modificarEstado/:idUsuario', desactivarUsuario)
+
+router.put('/login/modificarPassword/:idUsuario', modificarPassword)
+
+router.put('/login/modificar/:idUsuario', modificarUsuario)
 
 export default router

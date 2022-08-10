@@ -14,6 +14,10 @@ app.use(express.urlencoded({
    extended: true 
   }));
 
+  
+//cors
+app.use( cors() );
+
 app.use('/api/correspondencia',correspondencia);
 app.use('/api/correspondencia',login )
 
@@ -22,13 +26,8 @@ require('dotenv').config();
 //Directorio Publico
 app.use( express.static('public'));
 
-
-//cors
-app.use( cors() );
-
 // middlewares
 app.use(morgan('dev'));
-
 
 // Variables globales
 app.use((req, res, next) => {
