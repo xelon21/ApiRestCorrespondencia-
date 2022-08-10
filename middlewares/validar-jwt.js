@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken');
 
 const validarJWT = ( req, res = response, next ) => {
 
-    console.log(req.header('x-api-key'), 'xapikey')
-    console.log(req.header('apikey'), 'apikey')
+    // console.log(req.header('x-api-key'), 'xapikey')
+    // console.log(req.header('apikey'), 'apikey')
 
     const apiKey =  req.header('x-api-key');     
     if( !apiKey ) {
@@ -13,10 +13,10 @@ const validarJWT = ( req, res = response, next ) => {
         })
     }
     try {
-        const {nombreUsuario, idRol, idUsuario} = jwt.verify( apiKey, process.env.JWT_SECRET );        
-        req.nombreUsuario = nombreUsuario;
-        req.idRol = idRol;
-        req.idUsuario = idUsuario
+        const { nombreUsuario, idRol, idUsuario} = jwt.verify( apiKey, process.env.JWT_SECRET );        
+        req.NombreUsuario = nombreUsuario;
+        req.IdRol = idRol;
+        req.IdUsuario = idUsuario
     } catch (error) {
         return res.status(401).json({
             Error: 'Key no valida'

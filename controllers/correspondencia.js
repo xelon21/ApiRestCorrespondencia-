@@ -7,26 +7,25 @@ const { logCorrespondencia } = require('../helpers/logger')
 export const mostrarCorrespondencia = async (req, resp) => {
 
     try {
-        
-        const pool = await getConnection()
+    
+        const pool = await getConnection()      
         const result = await pool.request()
-        .query(`select d.nombreDocumento,
-                       e.nombreEnvio,
-                       u.nombreUsuario,
-                       destinatario,
-                       referencia,
-                       fecha,
-                       correlativo,
-                       estadoCorreo
-                       from correo c join tipoDocumento d
-                       on( d.idtipoDocumento = c.idTipoDocumento )
-                       join tipoEnvio e 
-                       on( e.idtipoEnvio = c.idTipoEnvio )
-                       join usuarios u 
-                       on( u.idUsuario = c.idUsuario )`)
-     
+        .query(`select d.NombreDocumento,
+                       e.TipoEnvio,
+                       u.NombreUsuario,
+                       Destinatario,
+                       Referencia,
+                       Fecha,
+                       Correlativo,
+                       EstadoCorreo
+                       from CORRESPONDENCIA2 c join TIPODOCUMENTO d
+                       on( d.IdTIpoDocumento = c.IdTIpoDocumento )
+                       join TIPOENVIO e 
+                       on( e.IdTipoEnvio = c.IdTipoEnvio )
+                       join USUARIOS u 
+                       on( u.IdUsuario = c.IdUsuario )`)
         resp.status(200).json(result.recordset)
-
+      
     } catch (error) {
         
         resp.status(400).json('Error al tratar de obtener los datos: ' + error)
@@ -41,14 +40,13 @@ export const ingresarCorrespondencia = async (req, resp) => {
      
     try {        
 
-        const pool = await getConnection();
-       
+        const pool = await getConnection();       
         await pool.request()
-        .input('idTipoDocumento', sql.Int, idTipoDocumento)
-        .input('idTipoEnvio', sql.Int, idTipoEnvio )
-        .input('idUsuario', sql.Int, idUsuario)
-        .input('destinatario', sql.VarChar, destinatario)
-        .input('referencia', sql.VarChar, referencia)       
+        .input('IdTIpoDocumento', sql.Int, idTipoDocumento)
+        .input('IdTipoEnvio', sql.Int, idTipoEnvio )
+        .input('IdUsuario', sql.Int, idUsuario)
+        .input('Destinatario', sql.VarChar, destinatario)
+        .input('Referencia', sql.VarChar, referencia)       
         .execute('SP_INGRESACORRESPONDENCIA')
         
         resp.status(200).json('Se ha agregado 1 correspondencia')    
@@ -68,12 +66,12 @@ export const modificarCorrespondencia = async (req, resp) => {
         const pool = await getConnection()
         const result = await pool.request()
         .input('correlativo', sql.VarChar, correlativo)
-        .query('select * from correo where correlativo = @correlativo')
+        .query('select * from CORRESPONDENCIA2 where Correlativo = @correlativo')
         if(result.rowsAffected == 0){
             resp.json('No se encontro ninguna correspondencia asociada')
         }else{
             result.recordset.forEach(element => {
-                   if(element.estadoCorreo == 'ANULADO'){
+                   if(element.EstadoCorreo == 'ANULADO'){
                      validador = false;
                      resp.status(400).json('Esta correspondencia ya esta anulada')
                    }else{
@@ -83,11 +81,11 @@ export const modificarCorrespondencia = async (req, resp) => {
         }
         if(validador){
             await pool.request()
-            .input('idTipoEnvio', sql.Int, idTipoEnvio )       
-            .input('destinatario', sql.VarChar, destinatario )
-            .input('referencia', sql.VarChar, referencia )
-            .input('estadoCorreo', sql.VarChar, estadoCorreo )
-            .input('correlativo', sql.VarChar, correlativo )
+            .input('IdTipoEnvio', sql.Int, idTipoEnvio )       
+            .input('Destinatario', sql.VarChar, destinatario )
+            .input('Referencia', sql.VarChar, referencia )
+            .input('EstadoCorreo', sql.VarChar, estadoCorreo )
+            .input('Correlativo', sql.VarChar, correlativo )
             .execute('SP_MODIFICARCORRESPONDENCIA')
 
             resp.status(200).json('Se ha modificado la correspondencia') 
@@ -105,7 +103,7 @@ export const muestraUltimo = async ( req, resp ) => {
         
         const pool = await getConnection()
         const result = await pool.request()
-        .query(`select correlativo from correo where idCorrespondencia = (SELECT MAX(idCorrespondencia) as correlativo FROM correo);`)
+        .query(`select Correlativo from CORRESPONDENCIA2 where IdCorrespondencia = (SELECT MAX(IdCorrespondencia) as Correlativo FROM CORRESPONDENCIA2);`)
      
         resp.status(200).json(result.recordset)
 
@@ -120,7 +118,7 @@ export const muestraTipoEnvio = async ( req, resp ) => {
     try {        
         const pool = await getConnection()
         const result = await pool.request()
-        .query(`select * from tipoEnvio`)
+        .query(`select * from TIPOENVIO`)
      
         resp.status(200).json(result.recordset)
 
@@ -134,7 +132,7 @@ export const muestraTipoDocumento = async ( req, resp ) => {
     try {        
         const pool = await getConnection()
         const result = await pool.request()
-        .query(`select * from tipoDocumento`)
+        .query(`select * from TIPODOCUMENTO`)
      
         resp.status(200).json(result.recordset)
 
@@ -150,8 +148,8 @@ export  const buscarCorrelativoModificar = async ( req, resp ) => {
         try {
             const pool = await getConnection()
             const result = await pool.request()
-            .input('correlativo', sql.VarChar, correlativo)
-            .query('select * from correo where correlativo = @correlativo')
+            .input('Correlativo', sql.VarChar, correlativo)
+            .query('select * from CORRESPONDENCIA2 where Correlativo = @correlativo')
             
             if(result.rowsAffected == 0){
                 resp.status(400).json('No se encontro correspondencia asociada')

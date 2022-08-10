@@ -20,22 +20,22 @@ export const loginUsuario = async (req, resp) => {
                 const pool = await getConnection()
                 const result = await pool.request()
                 .input('email', sql.VarChar, email)
-                .query(`select idUsuario, idRol, correoUsuario, password, nombreUsuario, estado from usuarios where correoUsuario = @email `)
-                              
+                .query(`select IdUsuario, IdRol, CorreoUsuario, Password, NombreUsuario, Estado from USUARIOS where CorreoUsuario = @email `)                              
+               
                     if(result.recordset.rowsAffected == 0 ){                    
                             resp.status(404).json('No se puede ingresar');
                     }else{
                         // se corrobora que la password coincida con la que se encuentra en la base de datos                               
-                        if(!result.recordset.rowsAffected == 0 || (await bcryptjs.compare(password, result.recordset[0].password))){                                                
+                        if(!result.recordset.rowsAffected == 0 || (await bcryptjs.compare(password, result.recordset[0].Password))){                                                
                                   // se genera el json web token 
-                                const token = await generarJWT( result.recordset[0].nombreUsuario, result.recordset[0].idRol, result.recordset[0].idUsuario );
+                                const token = await generarJWT( result.recordset[0].NombreUsuario, result.recordset[0].IdRol, result.recordset[0].IdUsuario );
                                    // logLogin.info(`Usuario autenticado: ${result[0].nombreUsuario}`)
                                   // se envia mensaje de respuesta 
                                 resp.status(200).json({
-                                    usuario: result.recordset[0].nombreUsuario,
-                                    idRol: result.recordset[0].idRol,
-                                    estado: result.recordset[0].estado,
-                                    apiKey: token
+                                    Usuario: result.recordset[0].NombreUsuario,
+                                    IdRol: result.recordset[0].IdRol,
+                                    Estado: result.recordset[0].Estado,
+                                    ApiKey: token
                                 })
                         }else{
                             resp.status(400).json('Las credenciales no coinciden')
@@ -62,18 +62,18 @@ export const registroUsuario = async (req, res) => {
 
             const pool = await getConnection();
             const result = await pool.request()
-            .query(`select nombreUsuario, correoUsuario from usuarios`)
+            .query(`select NombreUsuario, CorreoUsuario from USUARIOS`)
                                    
                     /** Se recorre el resultado de la query anterior para validar si existe el usuario */         
                     result.recordset.forEach(element => {                
                         /** Si exite el nombre de usuario y el correo, entonces devuelve verdadero */
-                     if(element.nombreUsuario == nombreUsuario){
-                        if( element.correoUsuario == email){  
+                     if(element.NombreUsuario == nombreUsuario){
+                        if( element.CorreoUsuario == email){  
                                 cont++;
                         }else{
                             cont++;
                         }
-                        }else if( element.correoUsuario == email){
+                        }else if( element.CorreoUsuario == email){
                             cont ++
                         }
                     })                 
@@ -87,12 +87,12 @@ export const registroUsuario = async (req, res) => {
                     }else{
                     /** Una vez que no exista el usuario dentro de la base de datos, se envian los datos de creacion */
                             await pool.request()
-                                .input('idRol', sql.Int, idRol)
-                                .input('correoUsuario', sql.VarChar, email )
-                                .input('password', sql.VarChar, hashPass)
-                                .input('nombreUsuario', sql.VarChar, nombreUsuario)
-                                .input('estado', sql.Int, estado)
-                                .input('activacionUsuario', sql.VarChar, activacionUsuario)       
+                                .input('IdRol', sql.Int, idRol)
+                                .input('CorreoUsuario', sql.VarChar, email )
+                                .input('Password', sql.VarChar, hashPass)
+                                .input('NombreUsuario', sql.VarChar, nombreUsuario)
+                                .input('Estado', sql.Int, estado)
+                                .input('ActivacionUsuario', sql.VarChar, activacionUsuario)       
                                 .execute('SP_REGISTROUSUARIO')
                             
                             res.status(200).json('Usuario Agregado')
@@ -110,21 +110,19 @@ export const registroUsuario = async (req, res) => {
 export const validaApiKey = async ( req, res ) => {    
 
         // se extraen los párametros de la request
-        const { nombreUsuario, idRol, idUsuario} = req; 
-        console.log(req)
-        console.log(nombreUsuario, idRol, idUsuario)
+        const { nombreUsuario, idRol, idUsuario} = req;       
         try {      
             // se declara una constante que almacenara la generacion del token 
             // y se llama al metodo que genera el mismo para posteriormente devolver
             // una respuesta segun el resultado arrojado
             const token = await generarJWT( nombreUsuario, idRol, idUsuario ) ;            
             return res.status(200).json({
-                estadoMsg: true,
-                msg: 'Key Valida',        
-                nombre: nombreUsuario,
-                idRol: idRol,
-                apiKey: token,     
-                idUsuario: idUsuario       
+                EstadoMsg: true,
+                Msg: 'Key Valida',        
+                Nombre: nombreUsuario,
+                IdRol: idRol,
+                ApiKey: token,     
+                IdUsuario: idUsuario       
             })  
         } catch (error) {
             console.log(error);
@@ -142,12 +140,12 @@ export  const validaApiKeyAdmin = async ( req, res ) => {
                     if( idRol === 1 ){
                         const apiKey = await generarJWTAdmin( nombreUsuario, idRol, idUsuario );                
                         return res.status(200).json({
-                            estadoMsg: true,
-                            msg: 'Key Valida',        
-                            nombre: nombreUsuario,
-                            idRol: idRol,
-                            apiKey: apiKey,
-                            idUsuario: idUsuario
+                            EstadoMsg: true,
+                            Msg: 'Key Valida',        
+                            Nombre: nombreUsuario,
+                            IdRol: idRol,
+                            ApiKey: apiKey,
+                            IdUsuario: idUsuario
                         }) 
                     }                
                     
@@ -193,7 +191,7 @@ export const traeRoles = async ( req, res ) => {
         try {
             const pool = await getConnection();
             const result = await pool.request()
-            .query('select * from roles')
+            .query('select * from ROLES')
 
             res.status(200).json(result.recordset)
             
@@ -213,9 +211,9 @@ export const traeUsuario = async ( req, res ) => {
 
             const pool = await getConnection()
             const result = await pool.request()
-            .query(`SELECT  idUsuario, nombreUsuario, r.rol, correoUsuario,
-                    estado, activacionUsuario, desactivacionUsuario 
-                    FROM usuarios u join roles r on ( u.idRol = r.idRol)`)
+            .query(`SELECT  IdUsuario, NombreUsuario, r.Rol, CorreoUsuario,
+                    Estado, ActivacionUsuario, DesactivacionUsuario 
+                    FROM USUARIOS u join ROLES r on ( u.IdRol = r.IdRol)`)
             res.status(200).json(result.recordset)
             
         } catch (error) {
@@ -242,16 +240,16 @@ export const desactivarUsuario = async ( req, res ) => {
             const fecha = new Date();
             let activo = false;
             const result = await pool.request()
-            .input('idUsuario', sql.VarChar, idUsuario)
-            .query('select * from usuarios where idUsuario = @idUsuario')
+            .input('IdUsuario', sql.VarChar, idUsuario)
+            .query('select * from USUARIOS where IdUsuario = @idUsuario')
 
             if(result.recordset.rowsAffected == 0){               
                 res.status(400).json('no se encontraron usuarios')
             }else{          
                 await pool.request()
-                .input('idUsuario', sql.Int, idUsuario )
-                .input('estado', sql.TinyInt, activo )
-                .input('desactivacionUsuario', sql.Date, fecha )
+                .input('IdUsuario', sql.Int, idUsuario )
+                .input('Estado', sql.TinyInt, activo )
+                .input('DesactivacionUsuario', sql.Date, fecha )
                 .execute('SP_MODIFICARESTADO')
   
                 res.status(200).json('Se a modificado el estado del usuario')
@@ -259,16 +257,16 @@ export const desactivarUsuario = async ( req, res ) => {
         }else{
             let activo = true;
             const result = await pool.request()
-            .input('idUsuario', sql.VarChar, idUsuario)
-            .query('select * from usuarios where idUsuario = @idUsuario')
+            .input('IdUsuario', sql.VarChar, idUsuario)
+            .query('select * from USUARIOS where IdUsuario = @idUsuario')
 
             if(result.recordset.rowsAffected == 0){
                 res.status(400).json('no se encontraron usuarios')
             }else{
                 await pool.request()
-                .input('idUsuario', sql.Int, idUsuario )
-                .input('estado', sql.TinyInt, activo )
-                .input('desactivacionUsuario', sql.VarChar, desactivacionUsuario )
+                .input('IdUsuario', sql.Int, idUsuario )
+                .input('Estado', sql.TinyInt, activo )
+                .input('DesactivacionUsuario', sql.VarChar, desactivacionUsuario )
                 .execute('SP_MODIFICARESTADO')
 
                 res.status(200).json('Se a modificado el estado del usuario')
@@ -296,8 +294,8 @@ export const modificarPassword = async ( req, res ) => {
        const pool = await getConnection()
        try { 
             const result = await pool.request()
-            .input('idUsuario', sql.VarChar, idUsuario)
-            .query('select * from usuarios where idUsuario = @idUsuario')
+            .input('IdUsuario', sql.VarChar, idUsuario)
+            .query('select * from USUARIOS where IdUsuario = @idUsuario')
            /** Se verifican 2 contraseñas si alguna no coincide, se envia mensaje de error */      
            if(password != password2){
                res.json({                
@@ -312,8 +310,8 @@ export const modificarPassword = async ( req, res ) => {
                     res.status(400).json('no se encontraron usuarios')
                }else {
                     await pool.request()
-                        .input('idUsuario', sql.Int, idUsuario)
-                        .input('password', sql.VarChar, hashPass)
+                        .input('IdUsuario', sql.Int, idUsuario)
+                        .input('Password', sql.VarChar, hashPass)
                         .execute('SP_MODIFICARPASSWORD')
                         
                         res.status(200).json(' Se ha modificado la contraseña ')
@@ -342,18 +340,18 @@ export const modificarUsuario = async ( req, res ) => {
 
     try {
         const result = await pool.request()
-            .input('idUsuario', sql.VarChar, idUsuario)
-            .query('select * from usuarios where idUsuario = @idUsuario')
+            .input('IdUsuario', sql.VarChar, idUsuario)
+            .query('select * from USUARIOS where IdUsuario = @idUsuario')
         
         if(result.recordset.rowsAffected == 0){
             res.status(400).json('No se encontraron registros')
         }else{
 
             await pool.request()
-            .input('idUsuario', sql.Int, idUsuario)
-            .input('idRol', sql.Int, idRol)
-            .input('correoUsuario', sql.VarChar, correoUsuario)
-            .input('nombreUsuario', sql.VarChar, nombreUsuario)
+            .input('IdUsuario', sql.Int, idUsuario)
+            .input('IdRol', sql.Int, idRol)
+            .input('CorreoUsuario', sql.VarChar, correoUsuario)
+            .input('NombreUsuario', sql.VarChar, nombreUsuario)
             .execute('SP_MODIFICARUSUARIO')
 
             res.status(200).json('Se ha modificado el usuario')

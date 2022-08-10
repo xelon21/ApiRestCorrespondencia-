@@ -1,10 +1,11 @@
 import sql from 'mssql';
 
+
 const dbSettings = {
-    user: 'sa', 
-    password: '.Blackheart5469', 
-    server: 'localhost',
-    database: 'Correspondencia',
+    user:  'sa', 
+    password:  'soinco123',
+    server:  '10.0.0.16',
+    database: 'MAINDB',
     options: {
         encrypt: true,
         trustServerCertificate: true
