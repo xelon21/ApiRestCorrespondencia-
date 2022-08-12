@@ -32,10 +32,12 @@ export const loginUsuario = async (req, resp) => {
                                    // logLogin.info(`Usuario autenticado: ${result[0].nombreUsuario}`)
                                   // se envia mensaje de respuesta 
                                 resp.status(200).json({
-                                    Usuario: result.recordset[0].NombreUsuario,
+                                    IdUsuario: result.recordset[0].IdUsuario,
+                                    NombreUsuario: result.recordset[0].NombreUsuario,
                                     IdRol: result.recordset[0].IdRol,
                                     Estado: result.recordset[0].Estado,
-                                    ApiKey: token
+                                    ApiKey: token,
+                                    EstadoMsg: true
                                 })
                         }else{
                             resp.status(400).json('Las credenciales no coinciden')
@@ -53,11 +55,10 @@ export const loginUsuario = async (req, resp) => {
 export const registroUsuario = async (req, res) => {
 
         // se extraen  los datos del body
-        const { idRol, email, password, nombreUsuario, estado, activacionUsuario } = req.body 
-           
+        const { IdRol, Email, Password, NombreUsuario, Estado, ActivacionUsuario } = req.body        
         try {
             // se genera el hash de la contraseña para postariormente almacenarla en la base de datos
-            let hashPass = await bcryptjs.hash(password, 8)
+            let hashPass = await bcryptjs.hash(Password, 8)
             let cont = 0;
 
             const pool = await getConnection();
@@ -67,13 +68,13 @@ export const registroUsuario = async (req, res) => {
                     /** Se recorre el resultado de la query anterior para validar si existe el usuario */         
                     result.recordset.forEach(element => {                
                         /** Si exite el nombre de usuario y el correo, entonces devuelve verdadero */
-                     if(element.NombreUsuario == nombreUsuario){
-                        if( element.CorreoUsuario == email){  
+                     if(element.NombreUsuario == NombreUsuario){
+                        if( element.CorreoUsuario == Email){  
                                 cont++;
                         }else{
                             cont++;
                         }
-                        }else if( element.CorreoUsuario == email){
+                        }else if( element.CorreoUsuario == Email){
                             cont ++
                         }
                     })                 
@@ -87,15 +88,18 @@ export const registroUsuario = async (req, res) => {
                     }else{
                     /** Una vez que no exista el usuario dentro de la base de datos, se envian los datos de creacion */
                             await pool.request()
-                                .input('IdRol', sql.Int, idRol)
-                                .input('CorreoUsuario', sql.VarChar, email )
+                                .input('IdRol', sql.Int, IdRol)
+                                .input('CorreoUsuario', sql.VarChar, Email )
                                 .input('Password', sql.VarChar, hashPass)
-                                .input('NombreUsuario', sql.VarChar, nombreUsuario)
-                                .input('Estado', sql.Int, estado)
-                                .input('ActivacionUsuario', sql.VarChar, activacionUsuario)       
+                                .input('NombreUsuario', sql.VarChar, NombreUsuario)
+                                .input('Estado', sql.Int, Estado)
+                                .input('ActivacionUsuario', sql.VarChar, ActivacionUsuario)       
                                 .execute('SP_REGISTROUSUARIO')
                             
-                            res.status(200).json('Usuario Agregado')
+                            res.status(200).json({
+                                Msg: 'Usuario Agregado',
+                                EstadoMsg: true
+                            })
                     }  
              }catch (error) {               
                   
@@ -109,20 +113,19 @@ export const registroUsuario = async (req, res) => {
 
 export const validaApiKey = async ( req, res ) => {    
 
-        // se extraen los párametros de la request
-        const { nombreUsuario, idRol, idUsuario} = req;       
+        // se extraen los párametros de la request      
+        const { NombreUsuario, IdRol, IdUsuario} = req;       
         try {      
             // se declara una constante que almacenara la generacion del token 
             // y se llama al metodo que genera el mismo para posteriormente devolver
             // una respuesta segun el resultado arrojado
-            const token = await generarJWT( nombreUsuario, idRol, idUsuario ) ;            
+            const token = await generarJWT( NombreUsuario, IdRol, IdUsuario ) ;            
             return res.status(200).json({
-                EstadoMsg: true,
-                Msg: 'Key Valida',        
-                Nombre: nombreUsuario,
-                IdRol: idRol,
+                EstadoMsg: true,                       
+                NombreUsuario: NombreUsuario,
+                IdRol: IdRol,
                 ApiKey: token,     
-                IdUsuario: idUsuario       
+                IdUsuario: IdUsuario       
             })  
         } catch (error) {
             console.log(error);
@@ -140,9 +143,8 @@ export  const validaApiKeyAdmin = async ( req, res ) => {
                     if( idRol === 1 ){
                         const apiKey = await generarJWTAdmin( nombreUsuario, idRol, idUsuario );                
                         return res.status(200).json({
-                            EstadoMsg: true,
-                            Msg: 'Key Valida',        
-                            Nombre: nombreUsuario,
+                            EstadoMsg: true,                                
+                            NombreUsuario: nombreUsuario,
                             IdRol: idRol,
                             ApiKey: apiKey,
                             IdUsuario: idUsuario
@@ -161,18 +163,17 @@ export  const validaApiKeyAdmin = async ( req, res ) => {
 
 export const filtroIdUsuario = async ( req, res ) => {
         /** Se obtiene el id del usuario mediante los parametros */
-        const { idUsuario } = req.params;
-            
+        const { idUsuario } = req.params; 
         try {
             /** Se ejecuta el prosedimiento almacenado enviandole el id del ususario */
             const pool = await getConnection()
             const result = await pool.request()
-            .input('filtro', sql.VarChar, idUsuario)
-            .execute('SP_FILTROUSUARIO')
+            .input('Filtro', sql.Int, idUsuario)          
+             .execute('SP_FILTROUSUARIO')
 
             if(result.recordset.rowsAffected == 0){
                 res.status(400).json("No se encontraron usuarios")
-            }else {
+            }else {                 
                 res.status(200).json(result.recordset[0])
             }
             
@@ -191,7 +192,7 @@ export const traeRoles = async ( req, res ) => {
         try {
             const pool = await getConnection();
             const result = await pool.request()
-            .query('select * from ROLES')
+            .query('select IdRol, Rol from ROLES')
 
             res.status(200).json(result.recordset)
             
@@ -230,43 +231,44 @@ export const desactivarUsuario = async ( req, res ) => {
 
     try {
         /** Se obtienen los datos del body, el estado y la fecha de desactivacion */
-        const { estado, desactivacionUsuario } = req.body;
+        const { Estado, DesactivacionUsuario } = req.body;
         /** Se obtiene el id del ususario a desactivar */
         const { idUsuario } = req.params;
         /** Query que trae la informacion del ususario dependiendo del id */      
         const pool = await getConnection()
-       
-        if(estado == 1 ){
-            const fecha = new Date();
-            let activo = false;
+        if(DesactivacionUsuario != null){
+            const FechaD = new Date(DesactivacionUsuario)
+            let Activo = 1;
             const result = await pool.request()
-            .input('IdUsuario', sql.VarChar, idUsuario)
-            .query('select * from USUARIOS where IdUsuario = @idUsuario')
+            .input('IdUsuario', sql.Int, idUsuario)
+            .query('select NombreUsuario from USUARIOS where IdUsuario = @idUsuario')
 
             if(result.recordset.rowsAffected == 0){               
                 res.status(400).json('no se encontraron usuarios')
             }else{          
                 await pool.request()
-                .input('IdUsuario', sql.Int, idUsuario )
-                .input('Estado', sql.TinyInt, activo )
-                .input('DesactivacionUsuario', sql.Date, fecha )
+                .input('IdUsuario', sql.Int, req.params.idUsuario )
+                .input('Estado', sql.TinyInt, Activo )
+                .input('DesactivacionUsuario', sql.Date, FechaD )
                 .execute('SP_MODIFICARESTADO')
   
                 res.status(200).json('Se a modificado el estado del usuario')
             }
         }else{
-            let activo = true;
+            const Fecha = new Date();  
+            let Activo = 0;
             const result = await pool.request()
-            .input('IdUsuario', sql.VarChar, idUsuario)
-            .query('select * from USUARIOS where IdUsuario = @idUsuario')
+            .input('IdUsuario', sql.Int, idUsuario )
+            .query('select NombreUsuario from USUARIOS where IdUsuario = @IdUsuario')
 
             if(result.recordset.rowsAffected == 0){
                 res.status(400).json('no se encontraron usuarios')
             }else{
+                console.log('cuando el estado es verdadero',req.params.idUsuario, Activo, Fecha)
                 await pool.request()
-                .input('IdUsuario', sql.Int, idUsuario )
-                .input('Estado', sql.TinyInt, activo )
-                .input('DesactivacionUsuario', sql.VarChar, desactivacionUsuario )
+                .input('IdUsuario', sql.Int, req.params.idUsuario  )
+                .input('Estado', sql.TinyInt, Activo )
+                .input('DesactivacionUsuario', sql.Date, Fecha )
                 .execute('SP_MODIFICARESTADO')
 
                 res.status(200).json('Se a modificado el estado del usuario')
@@ -286,18 +288,20 @@ export const desactivarUsuario = async ( req, res ) => {
 export const modificarPassword = async ( req, res ) => {   
 
        /** Se obtienen las contraseñas del body */
-       const { password, password2 } = req.body 
+       const { Password, Password2 } = req.body 
        /** Se obtiene el id del usuario */
        const { idUsuario } = req.params;  
        /** Se ejecuta la query para traer todos los datos 
-        *  Del id del usuario ingresado*/      
+        *  Del id del usuario ingresado*/          
+       console.log('body: ', req.body)
+       console.log('params: ', req.params)
        const pool = await getConnection()
        try { 
             const result = await pool.request()
-            .input('IdUsuario', sql.VarChar, idUsuario)
-            .query('select * from USUARIOS where IdUsuario = @idUsuario')
-           /** Se verifican 2 contraseñas si alguna no coincide, se envia mensaje de error */      
-           if(password != password2){
+            .input('IdUsuario', sql.Int, idUsuario)
+            .query('select * from USUARIOS where IdUsuario = @IdUsuario')
+           /** Se verifican 2 contraseñas si alguna no coincide, se envia mensaje de error */             
+           if(Password != Password2){
                res.json({                
                    msg: 'Las contraseñas no coinciden',                                      
                });
@@ -305,12 +309,12 @@ export const modificarPassword = async ( req, res ) => {
                /** Si pasa la validacion anterior, quiere decir que la primera password es la misma que la de confirmacion,
                 * por lo que se le hace un hash a la password 1 para posteriormente ingresarla en la base de datos.
                 */
-               let hashPass = await bcryptjs.hash(password, 8)
+               let hashPass = await bcryptjs.hash(Password, 8)
                if(result.recordset.rowsAffected == 0){
                     res.status(400).json('no se encontraron usuarios')
-               }else {
+               }else {                
                     await pool.request()
-                        .input('IdUsuario', sql.Int, idUsuario)
+                        .input('IdUsuario', sql.Int, req.params.idUsuario)
                         .input('Password', sql.VarChar, hashPass)
                         .execute('SP_MODIFICARPASSWORD')
                         
@@ -331,16 +335,15 @@ export const modificarPassword = async ( req, res ) => {
 //Metodo que permite editar una correspondencia siempre y cuando esta no este anulada.
 export const modificarUsuario = async ( req, res ) => {   
     /** Se obtiene el idRol, CorreoUsuario y nombreusuario del body */
-    const { idRol, correoUsuario, nombreUsuario } = req.body 
+    const { IdRol, CorreoUsuario, NombreUsuario, IUsuario } = req.body 
     /** Se obtiene el id del usuario desde los params */
-    const { idUsuario } = req.params;  
+    const { IdUsuario } = req.params;  
     /** Se ejecuta la query que permite traer todos los datos 
      * del usuario asociado al id entregado*/
     const pool = await getConnection()
-
     try {
         const result = await pool.request()
-            .input('IdUsuario', sql.VarChar, idUsuario)
+            .input('IdUsuario', sql.VarChar, IdUsuario)
             .query('select * from USUARIOS where IdUsuario = @idUsuario')
         
         if(result.recordset.rowsAffected == 0){
@@ -348,10 +351,10 @@ export const modificarUsuario = async ( req, res ) => {
         }else{
 
             await pool.request()
-            .input('IdUsuario', sql.Int, idUsuario)
-            .input('IdRol', sql.Int, idRol)
-            .input('CorreoUsuario', sql.VarChar, correoUsuario)
-            .input('NombreUsuario', sql.VarChar, nombreUsuario)
+            .input('IdUsuario', sql.Int, IUsuario)
+            .input('IdRol', sql.Int, IdRol)
+            .input('CorreoUsuario', sql.VarChar, CorreoUsuario)
+            .input('NombreUsuario', sql.VarChar, NombreUsuario)
             .execute('SP_MODIFICARUSUARIO')
 
             res.status(200).json('Se ha modificado el usuario')

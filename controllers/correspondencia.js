@@ -25,6 +25,7 @@ export const mostrarCorrespondencia = async (req, resp) => {
                        join USUARIOS u 
                        on( u.IdUsuario = c.IdUsuario )`)
         resp.status(200).json(result.recordset)
+    
       
     } catch (error) {
         
@@ -36,20 +37,23 @@ export const mostrarCorrespondencia = async (req, resp) => {
 export const ingresarCorrespondencia = async (req, resp) => {
 
     //se extraen los datos del body para su posterior insercion
-    const { idTipoDocumento, idTipoEnvio, idUsuario, destinatario, referencia } = req.body
-     
+    const { IdTIpoDocumento, IdTipoEnvio, IdUsuario, Destinatario, Referencia } = req.body
+     console.log(req.body)
     try {        
 
         const pool = await getConnection();       
         await pool.request()
-        .input('IdTIpoDocumento', sql.Int, idTipoDocumento)
-        .input('IdTipoEnvio', sql.Int, idTipoEnvio )
-        .input('IdUsuario', sql.Int, idUsuario)
-        .input('Destinatario', sql.VarChar, destinatario)
-        .input('Referencia', sql.VarChar, referencia)       
+        .input('IdTIpoDocumento', sql.Int, IdTIpoDocumento)
+        .input('IdTipoEnvio', sql.Int, IdTipoEnvio )
+        .input('IdUsuario', sql.Int, IdUsuario)
+        .input('Destinatario', sql.VarChar, Destinatario)
+        .input('Referencia', sql.VarChar, Referencia)       
         .execute('SP_INGRESACORRESPONDENCIA')
         
-        resp.status(200).json('Se ha agregado 1 correspondencia')    
+        resp.status(200).json({
+            EstadoMst: true,
+            Msg: 'Se ha agregado 1 correspondencia',           
+        })    
 
     }catch(error){
         resp.status(400).json('ocurrio un error: ' + error +'')
@@ -192,12 +196,12 @@ export const filtroRangoFechas = async ( req, resp ) => {
 }
 
 export const filtroCorrelativo = async ( req, resp ) => {
-    const { correlativo } = req.params;
+    const { Correlativo } = req.params;
     
     try {
         const pool = await getConnection()
         const result = await pool.request()
-        .input('filtro', sql.VarChar, correlativo)       
+        .input('filtro', sql.VarChar, Correlativo)       
         .execute('SP_FILTROCORRELATIVO')
         
         if(result.rowsAffected == 0){

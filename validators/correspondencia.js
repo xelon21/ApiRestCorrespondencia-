@@ -3,23 +3,23 @@ const { validateResult } = require('../helpers/validateHelper')
 
 /** validaciones de creacion de una correspondencia */
 const validateCreate = [
-    check('idTipoDocumento')
+    check('IdTIpoDocumento')
         .exists()
         .isNumeric()        
         .notEmpty(),
-    check('idTipoEnvio')
+    check('IdTipoEnvio')
         .exists()
         .isNumeric()
         .notEmpty(),
-    check('idUsuario')
+    check('IdUsuario')
         .exists()
         .isNumeric()
         .notEmpty(),
-    check('destinatario')
+    check('Destinatario')
         .exists()
         .isString()
         .notEmpty(),
-    check('referencia')
+    check('Referencia')
         .exists()
         .isString()  
         .notEmpty(),
