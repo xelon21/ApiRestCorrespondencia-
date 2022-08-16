@@ -30,23 +30,23 @@ const validateCreate = [
 
 /** validaciones de la actualizacion de una correspondencia */
 const validateUpdate = [    
-    check('idTipoEnvio')
+    check('IdTipoEnvio')
         .exists()
         .notEmpty()    
         .isNumeric(),
-    check('destinatario')
+    check('Destinatario')
         .exists()
         .notEmpty()
         .isString(),
-    check('referencia')
+    check('Referencia')
         .exists()
         .notEmpty()
         .isString(), 
-    check('correlativo')
+    check('Correlativo')
         .exists()
         .notEmpty()
         .isString(),
-    check('estadoCorreo')
+    check('EstadoCorreo')
         .exists()
         .notEmpty()
         .isString(),     

@@ -38,7 +38,7 @@ export const ingresarCorrespondencia = async (req, resp) => {
 
     //se extraen los datos del body para su posterior insercion
     const { IdTIpoDocumento, IdTipoEnvio, IdUsuario, Destinatario, Referencia } = req.body
-     console.log(req.body)
+    
     try {        
 
         const pool = await getConnection();       
@@ -65,12 +65,12 @@ export const ingresarCorrespondencia = async (req, resp) => {
 export const modificarCorrespondencia = async (req, resp) => {
     let validador = false;
     try {
-        const { idTipoEnvio,destinatario, referencia, estadoCorreo } = req.body;
-        const { correlativo } = req.params;
+        const { IdTipoEnvio, Destinatario, Referencia, EstadoCorreo, Correlativo2 } = req.body;    
         const pool = await getConnection()
         const result = await pool.request()
-        .input('correlativo', sql.VarChar, correlativo)
-        .query('select * from CORRESPONDENCIA2 where Correlativo = @correlativo')
+        .input('correlativo', sql.VarChar, Correlativo2)
+        .query('select IdTipoEnvio, Destinatario, Referencia, EstadoCorreo from CORRESPONDENCIA2 where Correlativo = @correlativo')
+
         if(result.rowsAffected == 0){
             resp.json('No se encontro ninguna correspondencia asociada')
         }else{
@@ -85,11 +85,11 @@ export const modificarCorrespondencia = async (req, resp) => {
         }
         if(validador){
             await pool.request()
-            .input('IdTipoEnvio', sql.Int, idTipoEnvio )       
-            .input('Destinatario', sql.VarChar, destinatario )
-            .input('Referencia', sql.VarChar, referencia )
-            .input('EstadoCorreo', sql.VarChar, estadoCorreo )
-            .input('Correlativo', sql.VarChar, correlativo )
+            .input('IdTipoEnvio', sql.Int, IdTipoEnvio )       
+            .input('Destinatario', sql.VarChar, Destinatario )
+            .input('Referencia', sql.VarChar, Referencia )
+            .input('EstadoCorreo', sql.VarChar, EstadoCorreo )
+            .input('Correlativo', sql.VarChar, Correlativo2 )
             .execute('SP_MODIFICARCORRESPONDENCIA')
 
             resp.status(200).json('Se ha modificado la correspondencia') 
@@ -122,7 +122,7 @@ export const muestraTipoEnvio = async ( req, resp ) => {
     try {        
         const pool = await getConnection()
         const result = await pool.request()
-        .query(`select * from TIPOENVIO`)
+        .query(`select IdTipoEnvio, TipoEnvio from TIPOENVIO`)
      
         resp.status(200).json(result.recordset)
 
@@ -136,7 +136,7 @@ export const muestraTipoDocumento = async ( req, resp ) => {
     try {        
         const pool = await getConnection()
         const result = await pool.request()
-        .query(`select * from TIPODOCUMENTO`)
+        .query(`select IdTIpoDocumento, NombreDocumento from TIPODOCUMENTO`)
      
         resp.status(200).json(result.recordset)
 
@@ -149,15 +149,15 @@ export const muestraTipoDocumento = async ( req, resp ) => {
 export  const buscarCorrelativoModificar = async ( req, resp ) => {
 
         const { correlativo } = req.params;
+
         try {
             const pool = await getConnection()
             const result = await pool.request()
             .input('Correlativo', sql.VarChar, correlativo)
-            .query('select * from CORRESPONDENCIA2 where Correlativo = @correlativo')
-            
+            .query('select IdCorrespondencia, IdUsuario, IdTIpoDocumento, IdTipoEnvio, Destinatario, Referencia, Fecha, Correlativo, EstadoCorreo from CORRESPONDENCIA2 where Correlativo = @correlativo')
             if(result.rowsAffected == 0){
                 resp.status(400).json('No se encontro correspondencia asociada')
-            }else {
+            }else {               
                 resp.status(200).json(result.recordset[0])
             }
          
@@ -203,11 +203,12 @@ export const filtroCorrelativo = async ( req, resp ) => {
         const result = await pool.request()
         .input('filtro', sql.VarChar, Correlativo)       
         .execute('SP_FILTROCORRELATIVO')
-        
+       
         if(result.rowsAffected == 0){
             resp.status(400).json('No se encontraron correspondencias')
         }else {
-            resp.status(200).json(result.recordset)
+ 
+            resp.status(200).json(result.recordset[0])
         }
      
     } catch (error) {

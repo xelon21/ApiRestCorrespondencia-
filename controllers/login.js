@@ -51,7 +51,6 @@ export const loginUsuario = async (req, resp) => {
         }
 }
 
-
 export const registroUsuario = async (req, res) => {
 
         // se extraen  los datos del body
@@ -330,7 +329,6 @@ export const modificarPassword = async ( req, res ) => {
            });  
        }  
 }
-
 
 //Metodo que permite editar una correspondencia siempre y cuando esta no este anulada.
 export const modificarUsuario = async ( req, res ) => {   
