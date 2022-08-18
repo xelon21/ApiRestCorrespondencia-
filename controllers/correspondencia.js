@@ -42,16 +42,21 @@ export const ingresarCorrespondencia = async (req, resp) => {
     try {        
 
         const pool = await getConnection();       
-        await pool.request()
+         await pool.request()
         .input('IdTIpoDocumento', sql.Int, IdTIpoDocumento)
         .input('IdTipoEnvio', sql.Int, IdTipoEnvio )
         .input('IdUsuario', sql.Int, IdUsuario)
         .input('Destinatario', sql.VarChar, Destinatario)
         .input('Referencia', sql.VarChar, Referencia)       
         .execute('SP_INGRESACORRESPONDENCIA')
+
+        const result = await pool.request()
+        .query(` select Correlativo from CORRESPONDENCIA2 where IdCorrespondencia = ( select count(Correlativo) + 1 from CORRESPONDENCIA2 );`)
+     
         
         resp.status(200).json({
-            EstadoMst: true,
+            EstadoMsg: true,
+            Correlativo: result.recordset[0].Correlativo,
             Msg: 'Se ha agregado 1 correspondencia',           
         })    
 
